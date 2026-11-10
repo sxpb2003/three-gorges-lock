@@ -75,7 +75,21 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 #load p{font-size:12px;color:var(--dim);letter-spacing:2px}
 #tip{position:fixed;padding:5px 9px;font-size:11.5px;background:rgba(6,12,18,.9);border:1px solid var(--line);
   border-radius:6px;pointer-events:none;display:none;z-index:10;color:var(--txt)}
-@media(max-width:900px){#panel{width:280px}#legend{display:none}#stats{display:none}#gal{display:none}}
+#pClose{position:absolute;top:8px;right:10px;z-index:2;width:26px;height:26px;line-height:24px;text-align:center;border-radius:8px;color:var(--dim);cursor:pointer;font-size:14px}
+#pClose:hover{color:var(--txt);background:rgba(85,194,255,.12)}
+#toggleP{position:fixed;top:92px;left:20px;z-index:9;display:none;font-size:13px;font-weight:600;color:var(--txt);background:rgba(20,32,44,.92);border:1px solid rgba(85,194,255,.45);border-radius:12px;padding:11px 16px;cursor:pointer;backdrop-filter:blur(10px);box-shadow:0 6px 18px rgba(0,0,0,.35)}
+#panel{transition:transform .35s ease,opacity .35s}
+#panel.hide{transform:translateX(-108%);opacity:0;pointer-events:none}
+#elev{width:88px;vertical-align:middle;accent-color:#55c2ff;cursor:pointer}
+#elevv{color:var(--txt);font-variant-numeric:tabular-nums;min-width:34px;display:inline-block;text-align:right}
+@media(max-width:900px){
+  #panel{width:calc(100vw - 32px);left:16px;top:84px;bottom:150px}
+  #legend{display:none}#stats{display:none}#gal{display:none}
+  #toggleP{top:84px;left:16px;font-size:13px}
+  #dock{bottom:10px;padding:6px;gap:6px}
+  .btn{font-size:11px;padding:6px 9px}
+  #hint{font-size:10px;bottom:96px}
+}
 </style>
 <script type="importmap">
 {"imports":{"three":"./vendor/three.module.js"}}
@@ -83,6 +97,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 </head>
 <body>
 <div id="view"></div>
+<div id="toggleP">☰ 显示选项</div>
 <div id="grad"></div>
 
 <header>
@@ -94,6 +109,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 </header>
 
 <aside id="panel">
+  <div id="pClose">✕</div>
   <div class="tabs">
     <div class="tab on" data-p="p1">基准参数</div>
     <div class="tab" data-p="p2">建模范围</div>
@@ -200,6 +216,8 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
   <div class="btn" data-layer="区域地形">区域地形</div>
   <div class="btn on" id="rockT">岩体半透明</div>
   <div class="sep"></div>
+  <label class="btn" style="cursor:default">俯视 <input id="elev" type="range" min="0" max="90" step="1" value="45"><span id="elevv">45°</span></label>
+  <div class="btn on" id="rot45">45° 缓慢旋转</div>
   <div class="btn" id="rot">自动旋转</div>
   <div class="btn" id="reset">复位</div>
 </div>
@@ -245,7 +263,19 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.maxDistance = 6000;
 controls.minDistance = 12;
-controls.autoRotateSpeed = 0.45;
+controls.autoRotateSpeed = 0.38;
+controls.autoRotate = true;
+
+// 视角俯仰控制（0~90°）
+function setElev(deg){
+  const tt = controls.target;
+  const off = camera.position.clone().sub(tt);
+  const r = off.length() || 1200;
+  const phi = THREE.MathUtils.degToRad(Math.max(0, Math.min(90, 90 - deg)));
+  const theta = Math.atan2(off.x, off.z);
+  camera.position.set(tt.x + r*Math.sin(phi)*Math.sin(theta), tt.y + r*Math.cos(phi), tt.z + r*Math.sin(phi)*Math.cos(theta));
+  controls.update();
+}
 
 scene.add(new THREE.HemisphereLight(0xbcd6f0, 0x2a261f, 0.65));
 const sun = new THREE.DirectionalLight(0xfff1dc, 1.9);
@@ -286,10 +316,72 @@ loader.load('model_base.glb', (gltf)=>{
   grid.position.y = box.min.y - center.y - 2;
   scene.add(grid);
   applyCam(parseInt(new URLSearchParams(location.search).get('cam') || '1', 10) || 1);
+  setElev(45);
+  setupGates();
   finishLoad();
+  // 打开后参数面板只显示 3 秒，然后自动收起让出模型
+  setTimeout(function(){
+    if(!document.getElementById('panel').dataset.userOpened) showPanel(false);
+  }, 3000);
 }, (e)=>{ if(e.total) bar.style.width = Math.round(e.loaded/e.total*100)+'%'; }, (err)=>{
   document.querySelector('#load p').textContent = '模型加载失败：' + err;
 });
+
+// ---------------- 人字门：按闸首次序开合（缓慢动画） ----------------
+const clock = new THREE.Clock();
+const gateList = [];
+const GATE_CLOSED = THREE.MathUtils.degToRad(59.3);   // 关闭角（相对贴墙开启位置）
+
+function setupGates(){
+  const meshes = [];
+  model.traverse(o=>{ if(o.isMesh && o.name && o.name.indexOf('人字门_') === 0) meshes.push(o); });
+  meshes.forEach(o=>{
+    const parts = o.name.split('_');       // 人字门_1_北_28
+    const hid = parseInt(parts[1]) - 1;
+    const south = parts[2] === '南';
+    const wy = parseFloat(parts[3]);
+    const bb = new THREE.Box3().setFromObject(o);
+    const hingeX = (wy >= 60) ? bb.min.x : bb.max.x;
+    const hingeY = (wy >= 60) ? (south ? bb.max.y : bb.min.y)
+                              : (south ? bb.min.y : bb.max.y);
+    const hinge = new THREE.Vector3(hingeX, hingeY, bb.min.z);
+    const g = o.geometry.clone();
+    g.translate(-hinge.x, -hinge.y, -hinge.z);
+    const pivot = new THREE.Group();
+    pivot.position.copy(hinge);
+    const mesh = new THREE.Mesh(g, o.material);
+    mesh.frustumCulled = false;
+    pivot.add(mesh);
+    model.add(pivot);
+    o.visible = false;
+    gateList.push({ pivot: pivot, hid: hid, closed: (south ? 1 : -1) * GATE_CLOSED });
+  });
+}
+
+function updateGates(){
+  if(!gateList.length) return;
+  const T = 26.0;
+  const tt = clock.getElapsedTime();
+  gateList.forEach(g=>{
+    const local = (tt + (5 - g.hid) * 1.9) % T;   // 下游闸首先开，逐级向上游推进
+    let f;
+    if (local < 4.0) f = 0;
+    else if (local < 7.0) f = (local - 4.0) / 3.0;
+    else if (local < 10.0) f = 1;
+    else if (local < 13.0) f = 1 - (local - 10.0) / 3.0;
+    else f = 0;
+    f = f * f * (3 - 2 * f);                        // 平滑
+    g.pivot.rotation.z = g.closed * f;
+  });
+}
+
+function showPanel(show){
+  const pnl = document.getElementById('panel');
+  const btn = document.getElementById('toggleP');
+  if(show){ pnl.dataset.userOpened = '1'; }
+  pnl.classList.toggle('hide', !show);
+  btn.style.display = show ? 'none' : 'block';
+}
 
 function finishLoad(){ bar.style.width='100%'; setTimeout(()=>document.getElementById('load').classList.add('done'), 260); }
 
@@ -349,6 +441,18 @@ document.getElementById('rockT').onclick = function(){
 
 const rotBtn = document.getElementById('rot');
 rotBtn.onclick = ()=>{ controls.autoRotate = !controls.autoRotate; rotBtn.classList.toggle('on', controls.autoRotate); };
+document.getElementById('elev').oninput = function(){
+  document.getElementById('elevv').textContent = this.value + '°';
+  setElev(+this.value);
+};
+document.getElementById('rot45').onclick = function(){
+  setElev(45);
+  controls.autoRotate = true;
+  this.classList.add('on');
+  rotBtn.classList.remove('on');
+};
+document.getElementById('toggleP').onclick = function(){ showPanel(true); };
+document.getElementById('pClose').onclick = function(){ showPanel(false); };
 document.getElementById('reset').onclick = ()=>{ controls.autoRotate=false; rotBtn.classList.remove('on'); applyCam(0); };
 
 const ray = new THREE.Raycaster();
@@ -390,11 +494,16 @@ addEventListener('resize', ()=>{
   renderer.setSize(innerWidth, innerHeight);
 });
 
-function loop(){ requestAnimationFrame(loop); controls.update(); renderer.render(scene, camera); }
+function loop(){ requestAnimationFrame(loop); updateGates(); controls.update(); renderer.render(scene, camera); }
 loop();
 </script>
 </body>
 </html>
+
+
+
+
+
 
 
 
