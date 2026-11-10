@@ -81,6 +81,10 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 #pClose{position:absolute;top:8px;right:10px;z-index:2;width:26px;height:26px;line-height:24px;text-align:center;border-radius:8px;color:var(--dim);cursor:pointer;font-size:14px}
 #pClose:hover{color:var(--txt);background:rgba(85,194,255,.12)}
 #labels{position:fixed;inset:0;pointer-events:none;z-index:6;overflow:hidden}
+#ids{position:fixed;inset:0;pointer-events:none;z-index:7;overflow:hidden}
+#ids .aid{position:absolute;transform:translate(-50%,-50%);font-size:10px;line-height:1.1;white-space:nowrap;
+  color:#ffd7d7;text-shadow:0 0 3px #000,0 1px 2px #000;pointer-events:none}
+#ids .aid.b{color:#cfe0ff}
 #tl{position:fixed;left:50%;transform:translateX(-50%);bottom:150px;z-index:8;display:none;align-items:center;gap:10px;
   background:rgba(6,12,18,.82);border:1px solid rgba(85,194,255,.3);border-radius:10px;padding:8px 14px;color:#dceaf6;font-size:12px}
 #tl.on{display:flex}
@@ -132,6 +136,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 <body>
 <div id="view"></div>
 <div id="labels"></div>
+<div id="ids"></div>
 <div id="tl"><span id="tlp">▶</span><input type="range" id="tls" min="0" max="0" value="0"><span id="tld">—</span><span id="tlc">0 / 0</span></div>
 <div id="status"></div>
 <div id="toggleP">☰ 显示选项</div>
@@ -395,7 +400,7 @@ loader.load('model_base.glb?v=8', (gltf)=>{ try { console.log('CB start');
   setupGates();
   initWater();
   // 叠加锚索（单独文件，约 2 MB，不阻塞首屏）
-  loader.load('锚索.glb?v=4', function(g2){
+  loader.load('锚索.glb?v=5', function(g2){
     var a = g2.scene;
     a.position.copy(model.position);
     scene.add(a);
@@ -624,6 +629,57 @@ function stopPlay(){
   document.getElementById('tlp').textContent = '▶';
 }
 
+
+// ---------------- 放大后显示锚索编号 ----------------
+var idData = [], idPool = [], idLast = 0;
+fetch('anchor_ids.json').then(function(r){ return r.json(); }).then(function(d){ idData = d; }).catch(function(){});
+function ensureIdEls(n){
+  var host = document.getElementById('ids');
+  while(idPool.length < n){
+    var el = document.createElement('div');
+    el.className = 'aid';
+    host.appendChild(el);
+    idPool.push(el);
+  }
+}
+function updateIds(){
+  var now = performance.now();
+  if(now - idLast < 160) return;
+  idLast = now;
+  if(!idData.length) return;
+  var host = document.getElementById('ids');
+  var camPos = camera.position;
+  var dist = camPos.distanceTo(controls.target);
+  if(dist > 130){ if(host.style.display !== 'none'){ host.style.display = 'none'; } return; }
+  host.style.display = 'block';
+  var lim = dist < 60 ? 70 : 45;
+  var curMonth = (tl.months.length ? tl.months[tl.idx] : '');
+  var cand = [];
+  var mp = model.position;
+  for(var i = 0; i < idData.length; i++){
+    var it = idData[i];
+    if(curMonth && it.d && it.d.slice(0, 7) > curMonth) continue;
+    var dx = it.p[0] + mp.x - camPos.x, dy = it.p[1] + mp.y - camPos.y, dz = it.p[2] + mp.z - camPos.z;
+    var d2 = dx * dx + dy * dy + dz * dz;
+    if(d2 < lim * lim) cand.push([d2, i]);
+  }
+  cand.sort(function(a, b){ return a[0] - b[0]; });
+  cand = cand.slice(0, 120);
+  ensureIdEls(cand.length);
+  var v = new THREE.Vector3();
+  for(var k = 0; k < idPool.length; k++){
+    var el = idPool[k];
+    if(k >= cand.length){ el.style.display = 'none'; continue; }
+    var it = idData[cand[k][1]];
+    v.set(it.p[0], it.p[1], it.p[2]).add(mp).project(camera);
+    if(v.z > 1 || v.z < -1){ el.style.display = 'none'; continue; }
+    el.style.display = 'block';
+    el.className = 'aid' + (it.t ? '' : ' b');
+    el.textContent = it.id;
+    el.style.left = ((v.x * 0.5 + 0.5) * innerWidth) + 'px';
+    el.style.top = ((-v.y * 0.5 + 0.5) * innerHeight) + 'px';
+  }
+}
 function showPanel(show){
   const pnl = document.getElementById('panel');
   const btn = document.getElementById('toggleP');
@@ -810,7 +866,7 @@ addEventListener('resize', ()=>{
   renderer.setSize(innerWidth, innerHeight);
 });
 
-function loop(){ requestAnimationFrame(loop); try { updateGates(); } catch(e) { if(!window.__loopErr){ window.__loopErr=1; console.error('loop', e); } } updateLabels(); controls.update(); renderer.render(scene, camera); }
+function loop(){ requestAnimationFrame(loop); try { updateGates(); } catch(e) { if(!window.__loopErr){ window.__loopErr=1; console.error('loop', e); } } updateLabels(); updateIds(); controls.update(); renderer.render(scene, camera); }
 loop();
 </script>
 </body>
