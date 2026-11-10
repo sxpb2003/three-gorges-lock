@@ -81,6 +81,9 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 #pClose{position:absolute;top:8px;right:10px;z-index:2;width:26px;height:26px;line-height:24px;text-align:center;border-radius:8px;color:var(--dim);cursor:pointer;font-size:14px}
 #pClose:hover{color:var(--txt);background:rgba(85,194,255,.12)}
 #labels{position:fixed;inset:0;pointer-events:none;z-index:6;overflow:hidden}
+#status{position:fixed;left:20px;bottom:132px;z-index:6;font-size:12.5px;line-height:1.55;color:#eaf6ff;pointer-events:none;max-width:340px;text-shadow:0 0 4px rgba(0,0,0,.95),0 1px 2px rgba(0,0,0,.9)}
+#status .op{color:#7fe0ff;font-weight:600}
+#status .wtr{color:#ffd166;font-weight:600}
 .lbl{position:absolute;transform:translate(-50%,-50%);font-size:10.5px;line-height:1.2;color:#eaf6ff;background:transparent;border:none;padding:1px 3px;border-radius:0;white-space:nowrap;pointer-events:none;text-shadow:0 0 3px rgba(0,0,0,.95),0 1px 2px rgba(0,0,0,.9)}
 .lbl.major{font-size:12.5px;font-weight:700;color:#cfeeff;border:none;background:transparent;text-shadow:0 0 4px rgba(0,0,0,.95),0 1px 3px rgba(0,0,0,.95)}
 #toggleP{position:fixed;top:92px;left:20px;z-index:9;display:none;font-size:13px;font-weight:600;color:var(--txt);background:rgba(20,32,44,.92);border:1px solid rgba(85,194,255,.45);border-radius:12px;padding:11px 16px;cursor:pointer;backdrop-filter:blur(10px);box-shadow:0 6px 18px rgba(0,0,0,.35)}
@@ -94,6 +97,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
   #panel .tab{padding:8px 4px;font-size:12px}
   #legend{display:none}#stats{display:none}#gal{display:none}
   #toggleP{top:66px;left:10px;font-size:12px;padding:9px 13px}
+  #status{left:10px;bottom:62px;font-size:11px;line-height:1.45;max-width:calc(100vw - 20px)}
   #dock{bottom:8px;padding:6px;gap:6px;max-height:none;overflow:visible}
   .btn{font-size:11px;padding:5px 8px}
   #elev{width:64px}
@@ -120,6 +124,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 <body>
 <div id="view"></div>
 <div id="labels"></div>
+<div id="status"></div>
 <div id="toggleP">☰ 显示选项</div>
 <div id="grad"></div>
 
@@ -356,6 +361,7 @@ loader.load('model_base.glb', (gltf)=>{
   applyCam(parseInt(new URLSearchParams(location.search).get('cam') || '1', 10) || 1);
   setElev(45);
   setupGates();
+  initWater();
   finishLoad();
   // 打开后参数面板只显示 3 秒，然后自动收起让出模型
   setTimeout(function(){
@@ -423,8 +429,83 @@ function updateGates(){
     const slotB = (6 + (5 - i)) * SLOT;    // 上行：六→一
     let f = Math.max(pulse(tt - slotA), pulse(tt - slotB));
     f = f * f * (3 - 2 * f);
+    g.dir = f - (g.f || 0);
+    g.f = f;
     g.pivot.rotation.y = g.closed * f;     // 绕竖直门轴（Y 轴）水平旋转
   });
+  updateWater();
+  updateStatus();
+}
+
+// ---------------- 闸室水位（与门联动） ----------------
+const LEVELS = [175.0, 152.4, 129.8, 107.2, 84.6, 62.0];
+const CN = ['一', '二', '三', '四', '五', '六'];
+const chambers = [];
+function initWater(){
+  const list = [];
+  model.traverse(function(o){
+    if(o.isMesh && o.name && o.name.indexOf('水面_') === 0) list.push(o);
+  });
+  list.forEach(function(o){
+    const parts = o.name.split('_');
+    const k = parseInt(parts[1]) - 1;      // 0..4 闸室序号
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    mats.forEach(function(m){ if(m){ m.transparent = true; m.opacity = 0.5; m.depthWrite = false; m.needsUpdate = true; } });
+    chambers.push({ k: k, mesh: o, high: LEVELS[k], low: LEVELS[k + 1], level: LEVELS[k], target: LEVELS[k], dir: 0 });
+  });
+  // 同闸室南北两块只保留一块参与计算
+  const uniq = {};
+  chambers.forEach(function(c){ uniq[c.k] = uniq[c.k] || []; uniq[c.k].push(c); });
+  chambers.length = 0;
+  Object.keys(uniq).forEach(function(k){
+    const arr = uniq[k];
+    const c = arr[0]; c.meshes = arr.map(function(x){ return x.mesh; });
+    chambers.push(c);
+  });
+}
+
+function updateWater(){
+  if(!chambers.length) return;
+  const dt = Math.min(clock.getDelta ? 0.05 : 0.05, 0.05);
+  const gates = {};
+  gateList.forEach(function(g){ gates[g.hid] = g; });
+  chambers.forEach(function(c){
+    const upGate = gates[c.k];          // 第 k 号门（上游侧）
+    const dnGate = gates[c.k + 1];      // 第 k+1 号门（下游侧）
+    if(dnGate && dnGate.f > 0.6) c.target = c.low;
+    if(upGate && upGate.f > 0.6) c.target = c.high;
+    const d = c.target - c.level;
+    c.dir = Math.abs(d) < 0.05 ? 0 : (d > 0 ? 1 : -1);
+    const step = Math.sign(d) * Math.min(Math.abs(d), 2.6 * dt);
+    c.level += step;
+    c.meshes.forEach(function(m){ m.position.y = c.level - LEVELS[c.k]; });
+  });
+}
+
+function updateStatus(){
+  const el = document.getElementById('status');
+  if(!el) return;
+  const lines = [];
+  // 正在动作的门
+  gateList.forEach(function(g){
+    if(g.f > 0.02 && g.f < 0.98){
+      lines.push('<span class="op">' + CN[g.hid] + '闸首人字门：' + (g.dir > 0 ? '开启中' : '关闭中') + '</span>');
+    }
+  });
+  // 正在升降的闸室
+  chambers.forEach(function(c){
+    if(c.dir !== 0){
+      const from = c.dir > 0 ? c.low : c.high;
+      const to = c.dir > 0 ? c.high : c.low;
+      lines.push('<span class="wtr">第' + CN[c.k] + '闸室：' + (c.dir > 0 ? '充水' : '泄水') + '中　' +
+                 from.toFixed(1) + ' → ' + to.toFixed(1) + ' m（当前 ' + c.level.toFixed(1) + ' m）</span>');
+    }
+  });
+  if(!lines.length){
+    const lv = chambers.map(function(c){ return c.level; });
+    lines.push('<span style="color:#9fb6c8">水位齐平，门可开启；各闸室水位 ' + lv.map(function(v){ return v.toFixed(1); }).join(' / ') + ' m</span>');
+  }
+  el.innerHTML = lines.join('<br>');
 }
 
 function showPanel(show){
