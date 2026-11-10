@@ -330,7 +330,7 @@ loader.load('model_base.glb', (gltf)=>{
 // ---------------- 人字门：按闸首次序开合（缓慢动画） ----------------
 const clock = new THREE.Clock();
 const gateList = [];
-const GATE_CLOSED = THREE.MathUtils.degToRad(59.3);   // 关闭角（相对贴墙开启位置）
+const GATE_CLOSED = THREE.MathUtils.degToRad(57.3);   // 关闭旋转角（arcsin 17/20.2，平面内）
 
 function setupGates(){
   const meshes = [];
@@ -342,7 +342,7 @@ function setupGates(){
     const wy = parseFloat(parts[3]);
     o.geometry.computeBoundingBox();
     const bb = o.geometry.boundingBox.clone();   // 模型局部坐标（导出时物体变换为单位矩阵）
-    const hingeX = (wy >= 60) ? bb.min.x : bb.max.x;
+    const hingeX = bb.max.x;                       // 铰点统一在闸首线 x=h
     const hingeY = (wy >= 60) ? (south ? bb.max.y : bb.min.y)
                               : (south ? bb.min.y : bb.max.y);
     const hinge = new THREE.Vector3(hingeX, hingeY, bb.min.z);
@@ -355,7 +355,8 @@ function setupGates(){
     pivot.add(mesh);
     model.add(pivot);
     o.visible = false;
-    gateList.push({ pivot: pivot, hid: hid, closed: (south ? 1 : -1) * GATE_CLOSED });
+    const sg = south ? -1 : 1;
+    gateList.push({ pivot: pivot, hid: hid, closed: (wy >= 60 ? sg : -sg) * GATE_CLOSED });
   });
 }
 
@@ -500,6 +501,7 @@ loop();
 </script>
 </body>
 </html>
+
 
 
 
