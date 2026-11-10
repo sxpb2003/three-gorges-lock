@@ -246,8 +246,8 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
     <div class="mh">图层</div>
     <div class="mbody">
       <div class="btn on" data-layer="锚索">锚索(红)</div>
-      <div class="btn on" data-layer="锁口锚杆">锁口锚杆(黄)</div>
-      <div class="btn on" data-layer="高强锚杆">高强锚杆(蓝)</div>
+      <div class="btn" data-layer="锁口锚杆">锁口锚杆(黄)</div>
+      <div class="btn" data-layer="高强锚杆">高强锚杆(蓝)</div>
       <div class="btn on" data-layer="人字门">闸门</div>
       <div class="btn on" data-layer="输水|泄水|检修门井">输水系统</div>
       <div class="btn on" data-layer="排水洞">排水洞</div>
@@ -335,7 +335,7 @@ scene.add(rim);
 let model, center = new THREE.Vector3(), size = new THREE.Vector3();
 const loader = new GLTFLoader();
 const bar = document.querySelector('#bar i');
-loader.load('model_anchor.glb?v=6', (gltf)=>{
+loader.load('model_anchor.glb?v=7', (gltf)=>{
   model = gltf.scene;
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
@@ -355,7 +355,7 @@ loader.load('model_anchor.glb?v=6', (gltf)=>{
   // 锚固视图：隐藏外闸墙、闸首、人字门、水位；中隔墩半透明，露出墩内锚索锚杆
   model.traverse(function(o){
     if(!o || !o.name) return;
-    if(/^(北闸墙|南闸墙|闸首|人字门_|水面_)/.test(o.name)) { o.visible = false; return; }
+    if(/^(北闸墙|南闸墙|闸首|人字门_|水面_|锁口锚杆|高强锚杆)/.test(o.name)) { o.visible = false; return; }
     if(/^(中墩|中隔墩顶)/.test(o.name) && o.isMesh){
       var mats = Array.isArray(o.material) ? o.material : [o.material];
       o.material = mats.map(function(m){
