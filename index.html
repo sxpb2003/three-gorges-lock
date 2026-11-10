@@ -371,14 +371,19 @@ function setupGates(){
   meshes.forEach(o=>{
     const parts = o.name.split('_');       // 人字门_1_北_28
     const hid = parseInt(parts[1]) - 1;
-    const south = parts[2] === '南';
-    const wy = parseFloat(parts[3]);
     o.geometry.computeBoundingBox();
-    const bb = o.geometry.boundingBox.clone();   // 模型局部坐标（导出时物体变换为单位矩阵）
-    const hingeX = bb.max.x;                       // 铰点统一在闸首线 x=h
-    const hingeY = (wy >= 60) ? (south ? bb.max.y : bb.min.y)
-                              : (south ? bb.min.y : bb.max.y);
-    const hinge = new THREE.Vector3(hingeX, hingeY, bb.min.z);
+    const bb = o.geometry.boundingBox.clone();
+    // 注意：GLB 为 Y 轴朝上。竖直门轴 = 平行 Y 轴；平面坐标为 (x, z)
+    const hingeX = bb.max.x;                      // 铰点都在闸首线 x=h
+    const zMid = (bb.min.z + bb.max.z) / 2;
+    const north = zMid < 0;                       // Blender +Y(北线) 导出后对应 -Z
+    const pier = Math.abs(zMid) < 45.5;           // |z| 小的贴中隔墩，大的贴外闸墙
+    const s = north ? 1 : -1;
+    // 铰点取靠闸室中心那一侧的墙面
+    let hingeZ;
+    if (pier) hingeZ = north ? bb.max.z : bb.min.z;
+    else      hingeZ = north ? bb.min.z : bb.max.z;
+    const hinge = new THREE.Vector3(hingeX, bb.min.y, hingeZ);
     const g = o.geometry.clone();
     g.translate(-hinge.x, -hinge.y, -hinge.z);
     const pivot = new THREE.Group();
@@ -388,8 +393,8 @@ function setupGates(){
     pivot.add(mesh);
     model.add(pivot);
     o.visible = false;
-    const sg = south ? -1 : 1;
-    gateList.push({ pivot: pivot, hid: hid, closed: (wy >= 60 ? sg : -sg) * GATE_CLOSED });
+    const closed = (pier ? -s : s) * GATE_CLOSED;
+    gateList.push({ pivot: pivot, hid: hid, closed: closed });
   });
 }
 
@@ -406,7 +411,7 @@ function updateGates(){
     else if (local < 13.0) f = 1 - (local - 10.0) / 3.0;
     else f = 0;
     f = f * f * (3 - 2 * f);                        // 平滑
-    g.pivot.rotation.z = g.closed * f;
+    g.pivot.rotation.y = g.closed * f;   // 绕竖直门轴（Y 轴）水平旋转
   });
 }
 
