@@ -93,6 +93,15 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 #tl #tld{color:#ffd166;font-weight:700;font-size:16px;min-width:96px;text-align:center}
 #tl #tlc{color:#9fb6c8;min-width:96px;text-align:right}
 @media (max-width:900px){#tl{bottom:96px;font-size:11px;gap:6px;padding:6px 8px}#tl input[type=range]{width:120px}}
+#hud{position:fixed;left:50%;transform:translateX(-50%);top:74px;z-index:9;display:none;
+  background:rgba(6,12,18,.85);border:1px solid rgba(85,194,255,.32);border-radius:10px;padding:10px 16px;
+  color:#e6f2ff;font-size:13px;line-height:1.65;max-width:min(1100px,92vw);text-align:center}
+#hud.on{display:block}
+#hud b{color:#ffd166}
+#hud .hl{font-size:14px}
+#hud .hd{color:#ffb0b0;font-size:12px;margin-top:2px}
+#hud .hc{color:#9fd6ff;font-size:12px;margin-top:4px}
+@media (max-width:900px){#hud{top:60px;font-size:11px;padding:7px 10px}#hud .hl{font-size:12px}#hud .hd,#hud .hc{font-size:10.5px}}
 #status{display:none !important;position:fixed;left:20px;bottom:132px;z-index:6;font-size:12.5px;line-height:1.55;color:#eaf6ff;pointer-events:none;max-width:340px;text-shadow:0 0 4px rgba(0,0,0,.95),0 1px 2px rgba(0,0,0,.9)}
 #status .op{color:#7fe0ff;font-weight:600}
 #status .wtr{color:#ffd166;font-weight:600}
@@ -137,6 +146,11 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 <div id="view"></div>
 <div id="labels"></div>
 <div id="ids"></div>
+<div id="hud">
+  <div class="hl"><b id="hudm">—</b>　本月完成 <b id="hudn">0</b> 束（系统 <b id="huds">0</b> / 随机 <b id="hudr">0</b>）</div>
+  <div class="hd" id="hudids">—</div>
+  <div class="hc">累计 <b id="hudc">0</b> / 3949（<span id="hudp">0.0%</span>）　系统 <b id="hudcs">0</b> / 1753（<span id="hudps">0.0%</span>）　随机 <b id="hudcr">0</b> / 2196（<span id="hudpr">0.0%</span>）</div>
+</div>
 <div id="tl"><span id="tlp">▶</span><input type="range" id="tls" min="0" max="0" value="0"><span id="tld">—</span><span id="tlc">0 / 0</span></div>
 <div id="status"></div>
 <div id="toggleP">☰ 显示选项</div>
@@ -401,7 +415,7 @@ loader.load('model_base.glb?v=8', (gltf)=>{ try { console.log('CB start');
   setupGates();
   initWater();
   // 叠加锚索（单独文件，约 2 MB，不阻塞首屏）
-  loader.load('锚索.glb?v=7', function(g2){
+  loader.load('锚索.glb?v=8', function(g2){
     var a = g2.scene;
     a.position.copy(model.position);
     scene.add(a);
@@ -595,6 +609,12 @@ function setupTimeline(root){
     return n;
   });
   tl.total = tl.counts.reduce(function(a, b){ return a + b; }, 0);
+  tl.info = {};
+  tl.sysTotal = 1753; tl.rndTotal = 2196;
+  fetch('anchor_months_info.json').then(function(r){ return r.json(); }).then(function(list){
+    list.forEach(function(it){ tl.info[it.m] = it; });
+    applyTimeline(tl.idx);
+  }).catch(function(){});
   var s = document.getElementById('tls');
   s.max = months.length - 1; s.value = months.length - 1;
   tl.idx = months.length - 1;
@@ -619,6 +639,30 @@ function applyTimeline(i){
   document.getElementById('tls').value = i;
   document.getElementById('tld').textContent = tl.months[i];
   document.getElementById('tlc').textContent = cum + ' / ' + tl.total + ' 束';
+  // ---- 上方进度板：本月完成 + 系统/随机分别统计 ----
+  var m = tl.months[i], info = (tl.info || {})[m] || {n:0, s:0, r:0, ids:[]};
+  var cs = 0, cr = 0;
+  for(var k = 0; k <= i; k++){
+    var it = (tl.info || {})[tl.months[k]];
+    if(it){ cs += it.s; cr += it.r; }
+  }
+  var hud = document.getElementById('hud');
+  hud.classList.add('on');
+  document.getElementById('hudm').textContent = m;
+  document.getElementById('hudn').textContent = info.n;
+  document.getElementById('huds').textContent = info.s;
+  document.getElementById('hudr').textContent = info.r;
+  var ids = (info.ids || []);
+  var show = ids.slice(0, 10).join('、');
+  document.getElementById('hudids').textContent = ids.length
+    ? ('本月锚索：' + show + (ids.length > 10 ? ' 等 ' + ids.length + ' 束' : ''))
+    : '本月无锚索';
+  document.getElementById('hudc').textContent = (cs + cr);
+  document.getElementById('hudp').textContent = ((cs + cr) / tl.total * 100).toFixed(1) + '%';
+  document.getElementById('hudcs').textContent = cs;
+  document.getElementById('hudps').textContent = (cs / tl.sysTotal * 100).toFixed(1) + '%';
+  document.getElementById('hudcr').textContent = cr;
+  document.getElementById('hudpr').textContent = (cr / tl.rndTotal * 100).toFixed(1) + '%';
 }
 function playTimeline(){
   var p = document.getElementById('tlp');
