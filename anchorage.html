@@ -161,7 +161,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
     <div class="h-title">三峡永久船闸 <span>· 锚固模型</span></div>
     <div class="h-sub">双线五级连续船闸 · 结构基准 + 锚索 3949 束（对穿 1986 红 / 端头 1963 绿，按验收资料）</div>
   </div>
-  <div class="badge">锚固模型另见 <a href="锚固模型.html" style="color:#55c2ff;text-decoration:none;font-weight:600">锚固模型 →</a>　|　1 单位 = 1 m</div>
+  <div class="badge"><a href="关联.html" style="color:#55c2ff;text-decoration:none;font-weight:600">资料关联</a>　|　锚固模型另见 <a href="锚固模型.html" style="color:#55c2ff;text-decoration:none;font-weight:600">锚固模型 →</a>　|　1 单位 = 1 m</div>
 </header>
 
 <aside id="panel">
@@ -422,7 +422,7 @@ applyCam(_cam === null || _cam === '' ? 0 : (parseInt(_cam, 10) || 0));
   setupGates();
   initWater();
   // 叠加锚索（单独文件，约 2 MB，不阻塞首屏）
-  loader.load('锚索.glb?v=13', function(g2){
+  loader.load('锚索.glb?v=14', function(g2){
     var a = g2.scene;
     a.position.copy(model.position);
     scene.add(a);
@@ -932,6 +932,7 @@ loop();
 </script>
 </body>
 </html>
+
 
 
 
