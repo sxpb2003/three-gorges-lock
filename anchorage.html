@@ -736,7 +736,7 @@ function updateIds(){
     if(v.z > 1 || v.z < -1){ el.style.display = 'none'; continue; }
     el.style.display = 'block';
     el.className = 'aid' + (it.t ? '' : ' b');
-    el.textContent = it.id + '\n' + (it.L ? (it.L.toFixed(1) + ' m') : '') + (it.d ? ('\n' + it.d.slice(0, 7)) : '');
+    el.textContent = it.id + '\n' + ((it.L ? it.L.toFixed(1) + ' m' : '') + (it.L && it.d ? ' · ' : '') + (it.d ? it.d.slice(0, 7) : ''));
     el.style.left = ((v.x * 0.5 + 0.5) * innerWidth) + 'px';
     el.style.top = ((-v.y * 0.5 + 0.5) * innerHeight) + 'px';
   }
