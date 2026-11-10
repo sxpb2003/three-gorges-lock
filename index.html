@@ -381,8 +381,9 @@ function setupGates(){
     const s = north ? 1 : -1;
     // 铰点取靠闸室中心那一侧的墙面
     let hingeZ;
-    if (pier) hingeZ = north ? bb.max.z : bb.min.z;
-    else      hingeZ = north ? bb.min.z : bb.max.z;
+    // 门龛在墙内：铰点取靠闸室中心的那一面（北线 z 为负、南线为正）
+    if (pier) hingeZ = north ? bb.min.z : bb.max.z;
+    else      hingeZ = north ? bb.max.z : bb.min.z;
     const hinge = new THREE.Vector3(hingeX, bb.min.y, hingeZ);
     const g = o.geometry.clone();
     g.translate(-hinge.x, -hinge.y, -hinge.z);
