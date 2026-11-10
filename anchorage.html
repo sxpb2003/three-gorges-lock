@@ -81,6 +81,14 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 #pClose{position:absolute;top:8px;right:10px;z-index:2;width:26px;height:26px;line-height:24px;text-align:center;border-radius:8px;color:var(--dim);cursor:pointer;font-size:14px}
 #pClose:hover{color:var(--txt);background:rgba(85,194,255,.12)}
 #labels{position:fixed;inset:0;pointer-events:none;z-index:6;overflow:hidden}
+#tl{position:fixed;left:50%;transform:translateX(-50%);bottom:150px;z-index:8;display:none;align-items:center;gap:10px;
+  background:rgba(6,12,18,.82);border:1px solid rgba(85,194,255,.3);border-radius:10px;padding:8px 14px;color:#dceaf6;font-size:12px}
+#tl.on{display:flex}
+#tl #tlp{cursor:pointer;padding:2px 8px;border:1px solid rgba(85,194,255,.4);border-radius:6px;color:#8fe0ff}
+#tl input[type=range]{width:220px}
+#tl #tld{color:#ffd166;font-weight:600;min-width:64px}
+#tl #tlc{color:#9fb6c8;min-width:96px;text-align:right}
+@media (max-width:900px){#tl{bottom:96px;font-size:11px;gap:6px;padding:6px 8px}#tl input[type=range]{width:120px}}
 #status{position:fixed;left:20px;bottom:132px;z-index:6;font-size:12.5px;line-height:1.55;color:#eaf6ff;pointer-events:none;max-width:340px;text-shadow:0 0 4px rgba(0,0,0,.95),0 1px 2px rgba(0,0,0,.9)}
 #status .op{color:#7fe0ff;font-weight:600}
 #status .wtr{color:#ffd166;font-weight:600}
@@ -124,6 +132,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 <body>
 <div id="view"></div>
 <div id="labels"></div>
+<div id="tl"><span id="tlp">▶</span><input type="range" id="tls" min="0" max="0" value="0"><span id="tld">—</span><span id="tlc">0 / 0</span></div>
 <div id="status"></div>
 <div id="toggleP">☰ 显示选项</div>
 <div id="grad"></div>
@@ -254,6 +263,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
       <div class="btn on" data-layer="排水洞">排水洞</div>
       <div class="btn" data-layer="区域地形">区域地形</div>
       <div class="btn on" id="rockT">岩体半透明</div>
+      <div class="btn" id="tlT">施工时间</div>
       <div class="btn" id="onlyA">只看锚索</div>
     </div>
   </div>
@@ -308,6 +318,15 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.maxDistance = 6000;
 controls.minDistance = 12;
+// 平移 + 俯视角度限制（0°=正俯视，90°=平视，不能到地下）
+controls.enablePan = true;
+controls.screenSpacePanning = true;
+controls.panSpeed = 1.1;
+controls.rotateSpeed = 0.85;
+controls.minPolarAngle = 0;
+controls.maxPolarAngle = Math.PI / 2;
+controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 controls.autoRotateSpeed = 0.38;
 controls.autoRotate = false;  // 默认不旋转
 
@@ -376,10 +395,11 @@ loader.load('model_base.glb?v=8', (gltf)=>{ try { console.log('CB start');
   setupGates();
   initWater();
   // 叠加锚索（单独文件，约 2 MB，不阻塞首屏）
-  loader.load('锚索.glb?v=3', function(g2){
+  loader.load('锚索.glb?v=4', function(g2){
     var a = g2.scene;
     a.position.copy(model.position);
     scene.add(a);
+    setupTimeline(a);
   }, undefined, function(){});
   finishLoad();
   // 打开后参数面板只显示 3 秒，然后自动收起让出模型
@@ -540,6 +560,68 @@ function updateGates(){
   lastT = t;
   updateOps(dt);
   updateStatus();
+}
+
+
+// ---------------- 施工时间轴：按月份逐月显示锚索 ----------------
+var tl = { months: [], meshes: [], idx: 0, timer: null, counts: [], total: 0 };
+function setupTimeline(root){
+  var byMonth = {};
+  root.traverse(function(o){
+    if(!o.isMesh || !o.name) return;
+    var m = o.name.match(/^锚索_(\d{4}-\d{2})_/);
+    var h = o.name.match(/^锚头_(\d{4}-\d{2})$/);
+    var key = m ? m[1] : (h ? h[1] : null);
+    if(!key) return;
+    (byMonth[key] = byMonth[key] || []).push(o);
+  });
+  var months = Object.keys(byMonth).sort();
+  if(!months.length) return;
+  tl.months = months;
+  tl.meshes = months.map(function(k){ return byMonth[k]; });
+  tl.counts = months.map(function(k){
+    var n = 0;
+    byMonth[k].forEach(function(o){
+      if(o.name.indexOf('锚索_') === 0) n += Math.floor(o.geometry.attributes.position.count / 6);
+    });
+    return n;
+  });
+  tl.total = tl.counts.reduce(function(a, b){ return a + b; }, 0);
+  var s = document.getElementById('tls');
+  s.max = months.length - 1; s.value = months.length - 1;
+  tl.idx = months.length - 1;
+  applyTimeline(months.length - 1);
+  document.getElementById('tlT').onclick = function(){
+    var on = document.getElementById('tl').classList.toggle('on');
+    this.classList.toggle('on', on);
+  };
+  s.oninput = function(){ stopPlay(); applyTimeline(parseInt(this.value, 10)); };
+  document.getElementById('tlp').onclick = function(){ tl.timer ? stopPlay() : playTimeline(); };
+}
+function applyTimeline(i){
+  i = Math.max(0, Math.min(i, tl.months.length - 1));
+  tl.idx = i;
+  for(var k = 0; k < tl.meshes.length; k++){
+    tl.meshes[k].forEach(function(o){ o.visible = (k <= i); });
+  }
+  var cum = 0;
+  for(var k = 0; k <= i; k++) cum += tl.counts[k];
+  document.getElementById('tls').value = i;
+  document.getElementById('tld').textContent = tl.months[i];
+  document.getElementById('tlc').textContent = cum + ' / ' + tl.total + ' 束';
+}
+function playTimeline(){
+  var p = document.getElementById('tlp');
+  p.textContent = '❚❚';
+  if(tl.idx >= tl.months.length - 1) applyTimeline(0);
+  tl.timer = setInterval(function(){
+    if(tl.idx >= tl.months.length - 1){ stopPlay(); return; }
+    applyTimeline(tl.idx + 1);
+  }, 700);
+}
+function stopPlay(){
+  if(tl.timer){ clearInterval(tl.timer); tl.timer = null; }
+  document.getElementById('tlp').textContent = '▶';
 }
 
 function showPanel(show){
