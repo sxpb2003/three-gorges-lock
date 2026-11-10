@@ -344,7 +344,7 @@ scene.add(rim);
 let model, center = new THREE.Vector3(), size = new THREE.Vector3();
 const loader = new GLTFLoader();
 const bar = document.querySelector('#bar i');
-loader.load('model_base.glb?v=11', (gltf)=>{
+loader.load('model_base.glb?v=12', (gltf)=>{
   model = gltf.scene;
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
@@ -719,6 +719,7 @@ loop();
 </script>
 </body>
 </html>
+
 
 
 
