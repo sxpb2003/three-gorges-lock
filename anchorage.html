@@ -251,6 +251,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
       <div class="btn on" data-layer="排水洞">排水洞</div>
       <div class="btn" data-layer="区域地形">区域地形</div>
       <div class="btn on" id="rockT">岩体半透明</div>
+      <div class="btn" id="onlyA">只看锚索</div>
     </div>
   </div>
   <div class="mgrp" data-g="more">
@@ -332,7 +333,7 @@ scene.add(rim);
 let model, center = new THREE.Vector3(), size = new THREE.Vector3();
 const loader = new GLTFLoader();
 const bar = document.querySelector('#bar i');
-loader.load('model_anchor.glb?v=2', (gltf)=>{
+loader.load('model_anchor.glb?v=3', (gltf)=>{
   model = gltf.scene;
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
@@ -603,7 +604,7 @@ function collectRockMats(){
 }
 function applyRock(on){
   rockMats.forEach(m=>{
-    m.transparent = on; m.opacity = on ? 0.32 : 1.0;
+    m.transparent = on; m.opacity = on ? 0.16 : 1.0;
     m.depthWrite = !on; m.needsUpdate = true;
   });
 }
@@ -628,6 +629,17 @@ document.getElementById('rot45').onclick = function(){
 };
 document.getElementById('toggleP').onclick = function(){ showPanel(true); };
 document.getElementById('pClose').onclick = function(){ showPanel(false); };
+let onlyAnchor = false;
+document.getElementById('onlyA').onclick = function(){
+  onlyAnchor = !onlyAnchor;
+  this.classList.toggle('on', onlyAnchor);
+  model.traverse(function(o){
+    if(o.isMesh){
+      if(onlyAnchor) o.visible = (o.name.indexOf('锚索') === 0);
+      else o.visible = true;
+    }
+  });
+};
 document.getElementById('labT').onclick = function(){
   const on = this.classList.toggle('on');
   document.getElementById('labels').style.display = on ? 'block' : 'none';
@@ -682,6 +694,7 @@ loop();
 </script>
 </body>
 </html>
+
 
 
 
