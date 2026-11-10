@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>三峡永久船闸锚固工程 · 三维模型</title>
+<title>三峡永久船闸 · 锚固模型（锚索 3789 束）</title>
 <style>
 :root{
   --bg:#0b1016; --panel:rgba(14,20,28,.82); --line:rgba(120,170,210,.18);
@@ -92,7 +92,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
     <div class="h-title">三峡永久船闸锚固工程 <span>· 三维模型</span></div>
     <div class="h-sub">双线五级连续船闸 · 高边坡锚固系统数字模型　|　依据 21 张施工图 + 548 篇文献复建</div>
   </div>
-  <div class="badge">长江三峡水利枢纽 · 左岸　|　模型坐标 1 单位 = 1 m</div>
+  <div class="badge"><a href="index.html" style="color:#55c2ff;text-decoration:none">← 结构基准</a>　|　长江三峡水利枢纽 · 左岸　|　模型坐标 1 单位 = 1 m</div>
 </header>
 
 <aside id="panel">
@@ -241,26 +241,14 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 
 <div id="dock">
   <div class="btn on" data-cam="0">全景</div>
-  <div class="btn" data-cam="1">南坡立面</div>
-  <div class="btn" data-cam="2">端部剖面</div>
-  <div class="btn" data-cam="3">锚索近景</div>
-  <div class="btn" data-cam="4">闸室内部</div>
-  <div class="btn" data-cam="5">俯视</div>
+  <div class="btn" data-cam="1">俯视</div>
+  <div class="btn" data-cam="2">锚索近景</div>
   <div class="sep"></div>
   <div class="btn on" data-layer="锚索">锚索</div>
-  <div class="btn on" data-layer="排水孔_">排水孔</div>
-  <div class="btn on" data-layer="锚桩">锚桩</div>
-  <div class="btn on" data-layer="锁口锚杆">锁口锚杆</div>
-  <div class="btn on" data-layer="高强锚杆_">高强锚杆</div>
-  <div class="btn on" data-layer="高强锚杆分区线">分区线</div>
-  <div class="btn on" data-layer="系船柱">系船柱</div>
   <div class="btn on" data-layer="人字门">闸门</div>
-  <div class="sep"></div>
   <div class="btn on" data-layer="输水|泄水">输水系统</div>
   <div class="btn on" data-layer="排水洞">排水洞</div>
-  <div class="btn on" data-layer="排水孔幕">排水孔幕</div>
-  <div class="btn on" data-layer="墙后排水">墙后排水</div>
-  <div class="btn on" data-layer="区域地形">区域地形</div>
+  <div class="btn" data-layer="区域地形">区域地形</div>
   <div class="btn" id="rockT">岩体半透明</div>
   <div class="sep"></div>
   <div class="btn" id="rot">自动旋转</div>
@@ -268,19 +256,9 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 </div>
 
 <div id="gal">
-  <img src="p1.jpg" data-t="全景" alt="">
-  <img src="p2.jpg" data-t="典型横断面" alt="">
-  <img src="p3.jpg" data-t="闸墙锚索细部" alt="">
-  <img src="p4.jpg" data-t="边坡锚索" alt="">
-  <img src="p5.jpg" data-t="闸室内部" alt="">
-  <img src="p6.jpg" data-t="鸟瞰" alt="">
-  <img src="p7.jpg" data-t="闸墙细部（衬砌墙/结构缝/系船柱槽）" alt="">
-  <img src="p8.jpg" data-t="输水系统（岩体隐藏）" alt="">
-  <img src="p9.jpg" data-t="排水系统（岩体隐藏）" alt="">
-  <img src="p10.jpg" data-t="坝区 30 m DEM 地形图" alt="">
-  <img src="p11.jpg" data-t="永久船闸与新通道 16 m 地形" alt="">
-  <img src="p12.jpg" data-t="锁口锚杆（台口 4 排 φ32，长 14/13/12/10 m）" alt="">
-  <img src="p13.jpg" data-t="高强锚杆（墙面锚头抽样，实际 92 657 根）" alt="">
+  <img src="a1.jpg" data-t="锚索全景（岩体半透明）" alt="">
+  <img src="a2.jpg" data-t="锚索近景：按坐标与长度三维布置" alt="">
+  <img src="a3.jpg" data-t="锚索俯视" alt="">
 </div>
 <div id="hint">左键旋转 · 右键平移 · 滚轮缩放 · 点击构件查看名称</div>
 
@@ -336,7 +314,7 @@ scene.add(rim);
 let model, center = new THREE.Vector3(), size = new THREE.Vector3();
 const loader = new GLTFLoader();
 const bar = document.querySelector('#bar i');
-loader.load('model.glb', (gltf)=>{
+loader.load('model_anchor.glb', (gltf)=>{
   model = gltf.scene;
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
