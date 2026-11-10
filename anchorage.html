@@ -322,7 +322,8 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.maxDistance = 6000;
-controls.minDistance = 12;
+controls.minDistance = 0.5;   // 可一路放大到锚头尺度（1 单位=1 m）
+controls.zoomSpeed = 1.1;
 // 平移 + 俯视角度限制（0°=正俯视，90°=平视，不能到地下）
 controls.enablePan = true;
 controls.screenSpacePanning = true;
