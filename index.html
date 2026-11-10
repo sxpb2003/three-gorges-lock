@@ -457,6 +457,7 @@ function buildSeq(){
 }
 
 function updateOps(dt){
+  try {
   if (!seq) { seq = buildSeq(); seqIdx = 0; stepT = 0; }
   // 门平滑运动
   gateList.forEach(function(g){
@@ -468,6 +469,7 @@ function updateOps(dt){
   let done = false;
   if (st.open || st.close) {
     const g = gByHead((st.open || st.close) - 1);
+    if (!g) { seqIdx = (seqIdx + 1) % seq.length; stepT = 0; return; }
     g.target = st.open ? 1 : 0;
     if (g.f === g.target) { stepT += dt; if (stepT >= (st.hold || 0)) done = true; }
     else stepT = 0;
@@ -485,6 +487,7 @@ function updateOps(dt){
     }
   }
   if (done) { seqIdx = (seqIdx + 1) % seq.length; stepT = 0; }
+  } catch(e) { if(!window.__opsErr){ window.__opsErr=1; console.error('ops', e); } }
   // 水面跟随
   chambers.forEach(function(c){
     c.meshes.forEach(function(m){ m.position.y = c.level - P[c.k]; });
@@ -695,7 +698,7 @@ addEventListener('resize', ()=>{
   renderer.setSize(innerWidth, innerHeight);
 });
 
-function loop(){ requestAnimationFrame(loop); updateGates(); updateLabels(); controls.update(); renderer.render(scene, camera); }
+function loop(){ requestAnimationFrame(loop); try { updateGates(); } catch(e) { if(!window.__loopErr){ window.__loopErr=1; console.error('loop', e); } } updateLabels(); controls.update(); renderer.render(scene, camera); }
 loop();
 </script>
 </body>
