@@ -70,7 +70,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 #lightbox img{max-width:92vw;max-height:84vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 #lbcap{color:var(--dim);font-size:13px}
 #hint{position:fixed;left:20px;bottom:104px;z-index:6;font-size:11.5px;color:#5f7789}
-#load{position:fixed;inset:0;background:#070b10;z-index:30;display:flex;align-items:center;justify-content:center;
+#load{position:fixed;inset:0;background:#070b10;z-index:30;display:flex;align-items:center;justify-content:center;transition:opacity .2s;
   flex-direction:column;gap:16px;transition:opacity .5s}
 #load.done{opacity:0;pointer-events:none}
 #bar{width:240px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
@@ -575,7 +575,7 @@ function updateLabels(){
   });
 }
 
-function finishLoad(){ bar.style.width='100%'; setTimeout(()=>document.getElementById('load').classList.add('done'), 260); }
+function finishLoad(){ bar.style.width='100%'; document.getElementById('load').classList.add('done'); }
 
 function applyCam(i){
   const poses = [
