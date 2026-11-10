@@ -1,0 +1,485 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>三峡永久船闸锚固工程 · 三维模型</title>
+<style>
+:root{
+  --bg:#0b1016; --panel:rgba(14,20,28,.82); --line:rgba(120,170,210,.18);
+  --txt:#dbe7f2; --dim:#8ba3b8; --accent:#55c2ff; --accent2:#ffb547; --green:#4fd18b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
+  font-family:"Microsoft YaHei","PingFang SC","Noto Sans SC",system-ui,-apple-system,sans-serif}
+#view{position:fixed;inset:0}
+canvas{display:block}
+#grad{position:fixed;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 0%,rgba(60,120,180,.18),transparent 55%),
+             radial-gradient(ellipse at 20% 100%,rgba(20,60,90,.25),transparent 60%)}
+header{position:fixed;top:0;left:0;right:0;padding:18px 26px;pointer-events:none;z-index:5;
+  display:flex;align-items:flex-start;justify-content:space-between}
+.h-title{font-size:22px;font-weight:700;letter-spacing:1px}
+.h-title span{color:var(--accent)}
+.h-sub{margin-top:5px;font-size:12px;color:var(--dim);letter-spacing:.5px}
+.badge{pointer-events:auto;font-size:11px;color:var(--dim);border:1px solid var(--line);
+  padding:6px 10px;border-radius:20px;background:rgba(10,16,22,.6);backdrop-filter:blur(8px)}
+#panel{position:fixed;top:86px;left:20px;bottom:110px;width:340px;z-index:6;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(14px);
+  display:flex;flex-direction:column;overflow:hidden;transition:transform .25s ease,opacity .25s}
+#panel.hide{transform:translateX(-370px);opacity:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);flex:0 0 auto}
+.tab{flex:1;text-align:center;padding:11px 4px;font-size:13px;color:var(--dim);cursor:pointer;transition:.15s}
+.tab.on{color:var(--txt);box-shadow:inset 0 -2px 0 var(--accent);background:rgba(85,194,255,.06)}
+.pane{display:none;overflow-y:auto;padding:14px 16px;font-size:12.5px;line-height:1.65;flex:1}
+.pane.on{display:block}
+.pane::-webkit-scrollbar{width:6px}.pane::-webkit-scrollbar-thumb{background:rgba(120,170,210,.25);border-radius:3px}
+h3{font-size:12px;color:var(--accent);margin:14px 0 6px;letter-spacing:.6px;font-weight:600}
+h3:first-child{margin-top:2px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+td{padding:4px 2px;border-bottom:1px dashed rgba(120,170,210,.12);vertical-align:top}
+td:first-child{color:var(--dim);width:44%}
+td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-nums}
+.k{color:var(--accent2)}
+.note{color:var(--dim);font-size:11.5px;margin-top:8px;line-height:1.6}
+.src{color:#6f8aa1;font-size:11px;margin-top:10px;line-height:1.6}
+#legend{position:fixed;right:20px;top:92px;z-index:6;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px;font-size:12px;backdrop-filter:blur(12px);min-width:170px}
+#legend .lg{display:flex;align-items:center;gap:8px;padding:2px 0;color:var(--dim)}
+.dot{width:9px;height:9px;border-radius:3px;flex:0 0 auto}
+#stats{position:fixed;right:20px;top:452px;z-index:6;background:var(--panel);border:1px solid var(--line);
+  border-radius:12px;padding:10px 14px;font-size:12px;color:var(--dim);backdrop-filter:blur(12px);min-width:170px}
+#stats b{color:var(--txt);font-weight:600}
+#dock{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:7;display:flex;gap:8px;
+  padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(14px);
+  align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px)}
+.btn{font-size:12px;color:var(--dim);background:rgba(255,255,255,.03);border:1px solid transparent;
+  padding:6px 11px;border-radius:9px;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn:hover{color:var(--txt);background:rgba(85,194,255,.1)}
+.btn.on{color:#04121c;background:var(--accent);font-weight:600}
+.sep{width:1px;height:20px;background:var(--line);margin:0 3px}
+#gal{position:fixed;right:20px;bottom:104px;z-index:6;display:flex;gap:6px}
+#gal img{width:64px;height:40px;object-fit:cover;border-radius:6px;border:1px solid var(--line);cursor:pointer;
+  opacity:.72;transition:.2s}
+#gal img:hover{opacity:1;transform:translateY(-2px)}
+#lightbox{position:fixed;inset:0;background:rgba(3,6,10,.92);z-index:20;display:none;
+  align-items:center;justify-content:center;flex-direction:column;gap:10px}
+#lightbox.on{display:flex}
+#lightbox img{max-width:92vw;max-height:84vh;border-radius:8px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+#lbcap{color:var(--dim);font-size:13px}
+#hint{position:fixed;left:20px;bottom:104px;z-index:6;font-size:11.5px;color:#5f7789}
+#load{position:fixed;inset:0;background:#070b10;z-index:30;display:flex;align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;transition:opacity .5s}
+#load.done{opacity:0;pointer-events:none}
+#bar{width:240px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden}
+#bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#2f8fd8,#55c2ff);transition:width .2s}
+#load p{font-size:12px;color:var(--dim);letter-spacing:2px}
+#tip{position:fixed;padding:5px 9px;font-size:11.5px;background:rgba(6,12,18,.9);border:1px solid var(--line);
+  border-radius:6px;pointer-events:none;display:none;z-index:10;color:var(--txt)}
+#toggleP{position:fixed;top:92px;left:20px;z-index:8;display:none}
+@media(max-width:900px){#panel{width:280px}#legend{display:none}#stats{display:none}#gal{display:none}}
+</style>
+<script type="importmap">
+{"imports":{"three":"./vendor/three.module.js"}}
+</script>
+</head>
+<body>
+<div id="view"></div>
+<div id="grad"></div>
+
+<header>
+  <div>
+    <div class="h-title">三峡永久船闸锚固工程 <span>· 三维模型</span></div>
+    <div class="h-sub">双线五级连续船闸 · 高边坡锚固系统数字模型　|　依据 21 张施工图 + 548 篇文献复建</div>
+  </div>
+  <div class="badge">长江三峡水利枢纽 · 左岸　|　模型坐标 1 单位 = 1 m</div>
+</header>
+
+<aside id="panel">
+  <div class="tabs">
+    <div class="tab on" data-p="p1">工程参数</div>
+    <div class="tab" data-p="p2">图纸解读</div>
+    <div class="tab" data-p="p3">模型说明</div>
+  </div>
+  <div class="pane on" id="p1">
+    <h3>总体布置</h3>
+    <table>
+      <tr><td>船闸型式</td><td>双线五级连续船闸</td></tr>
+      <tr><td>设计水头</td><td>113 m</td></tr>
+      <tr><td>闸室有效尺寸</td><td>280 × 34 × 5.0 m</td></tr>
+      <tr><td>线路总长 / 主体段</td><td>6 442 / 1 607 m</td></tr>
+      <tr><td>单线闸槽开挖宽</td><td>约 37 m</td></tr>
+      <tr><td>中隔墩宽度</td><td>55 ~ 57 m</td></tr>
+      <tr><td>上游通航水位</td><td>175.0 / 135.0 m</td></tr>
+      <tr><td>下游通航水位</td><td>73.8 / 62.0 m</td></tr>
+    </table>
+    <h3>闸首 / 闸室高程</h3>
+    <table>
+      <tr><td>闸顶高程（一~六闸首）</td><td>185 / 179 / 160 / 139 / 116.67 / 96.42 m</td></tr>
+      <tr><td>闸室底板（1~5 闸室）</td><td>122.60 / 112.95 / 92.20 / 71.45 / 50.70 m</td></tr>
+      <tr><td>闸墙（衬砌墙）高度</td><td>48 ~ 68.5 m</td></tr>
+      <tr><td>薄衬砌墙厚</td><td>1.5 ~ 2.1 m</td></tr>
+      <tr><td>闸首重力衬砌墙</td><td>底宽 12 m，高 68 m</td></tr>
+      <tr><td>直立坡高度</td><td>50 ~ 70 m</td></tr>
+    </table>
+    <h3>高边坡</h3>
+    <table>
+      <tr><td>最大开挖高度</td><td>约 170 m</td></tr>
+      <tr><td>坡比</td><td>微新岩 1:0.3<br>弱风化 1:0.5<br>全强风化 1:1~1:1.5</td></tr>
+      <tr><td>梯段高度</td><td>15 m</td></tr>
+      <tr><td>马道宽度</td><td>5 m（宽马道 10~15 m）</td></tr>
+      <tr><td>闸顶以上平台</td><td>5 m</td></tr>
+    </table>
+    <h3>锚固体系</h3>
+    <table>
+      <tr><td>预应力锚索总数</td><td>4 376 束</td></tr>
+      <tr><td>吨位构成</td><td>1 000 kN×229<br>3 000 kN×4 147</td></tr>
+      <tr><td>锚索形式</td><td>端头 2 392 / 对穿 1 984</td></tr>
+      <tr><td>锚索长度</td><td>29 ~ 70 m（端头锚 30~57）</td></tr>
+      <tr><td>系统锚索间排距</td><td>3.0 × 3.5 m</td></tr>
+      <tr><td>3000 kN 孔/束</td><td>φ165 mm / 19×φ15.24</td></tr>
+      <tr><td>1000 kN 孔/束</td><td>φ115 mm / 7×φ15.24</td></tr>
+      <tr><td>张拉锁定</td><td>3 000 kN（超张 15%）</td></tr>
+      <tr><td>高强锚杆</td><td>9.7 万根 φ32，长 8~13 m</td></tr>
+      <tr><td>锁口锚杆</td><td>12 ~ 14 m</td></tr>
+      <tr><td>普通系统锚杆</td><td>近 20 万根</td></tr>
+    </table>
+    <h3>排水与附属</h3>
+    <table>
+      <tr><td>排水洞</td><td>南北各 7 层，共 14 条</td></tr>
+      <tr><td>洞距坡面 / 层高差</td><td>30~45 m / 25~33 m</td></tr>
+      <tr><td>排水洞断面</td><td>2.5×3.0 m（直立坡段 3.0×3.5）</td></tr>
+      <tr><td>洞内排水孔</td><td>φ91 mm，孔距 2.0~2.5 m</td></tr>
+      <tr><td>坡面排水孔</td><td>φ46 mm，3×3 m</td></tr>
+      <tr><td>系船柱</td><td>浮式，每闸室 22 个，共 220 个</td></tr>
+      <tr><td>输水系统</td><td>每线 2 条主廊道，6 组反弧门</td></tr>
+      <tr><td>阀门顶最小淹没</td><td>26 m</td></tr>
+    </table>
+    <div class="src">数据来源：徐麟祥《三峡船闸高陡岩石开挖边坡设计研究》、钮新强《三峡船闸的主要技术特色》《全衬砌船闸设计》、高大水《三峡永久船闸高边坡预应力锚固技术》、陈孝英《三峡船闸锚固工程防护技术》、黄毅《三峡船闸高边坡地下排水设计研究》等。</div>
+  </div>
+  <div class="pane" id="p2">
+    <h3>图纸构成（21 个 DWG）</h3>
+    <table>
+      <tr><td>边坡立面</td><td>北坡 / 南坡 / 中北 / 中南</td></tr>
+      <tr><td>锚索布置</td><td>周燕玲的锚索布置图</td></tr>
+      <tr><td>排水孔布置</td><td>7 张（四条坡面）</td></tr>
+      <tr><td>锚桩布置</td><td>2 张</td></tr>
+      <tr><td>锁口锚杆布置</td><td>4 张（北线北坡 / 中北 / 中南 / 南线南坡）</td></tr>
+      <tr><td>高强锚杆分区线</td><td>1 张（另在 3 张锁口锚杆图中重复）</td></tr>
+      <tr><td>专项</td><td>系船柱 / 系船柱轴线 / 标注</td></tr>
+    </table>
+    <h3>坐标系与比例</h3>
+    <p style="color:var(--dim)">图纸坐标：X = 桩号×100，Y = 高程×100（1:100）。全段桩号 14 950~16 660 m，高程 117~185 m，为沿轴线展开的立面图。</p>
+    <h3>图纸性质</h3>
+    <p style="color:var(--dim)">各图为"展开立面/梯段图"：横轴桩号、纵轴高程；水平线为马道，短竖线为坡面排水孔，圆点为锚索孔位，红线为分仓缝，1:0.5、1:0.142 等为坡面坡比。</p>
+    <h3>本套图提取的孔位 / 线位</h3>
+    <table>
+      <tr><td>锚索孔位</td><td>1 862 点（4 条坡面）</td></tr>
+      <tr><td>排水孔</td><td>566 个</td></tr>
+      <tr><td>锚桩</td><td>121 根</td></tr>
+      <tr><td>系船柱轴线</td><td>48 处</td></tr>
+      <tr><td>锁口锚杆孔位（图形）</td><td>628 点（中南 292 / 南坡 336，水平 2 m、竖向 1.7 m）</td></tr>
+      <tr><td>高强锚杆分区线</td><td>269 段（A/B/C/D 四面）</td></tr>
+    </table>
+    <div class="note">锚索按 SC/SD、MC/MD、NC/ND 编号，分属四条坡面；系统锚索与随机锚索的工程量统计表位于图纸顶部（截至 1999-10）。</div>
+  </div>
+  <div class="pane" id="p3">
+    <h3>模型内容</h3>
+    <table>
+      <tr><td>闸首</td><td>6 座（含人字门）</td></tr>
+      <tr><td>闸室</td><td>5 级，双线</td></tr>
+      <tr><td>中隔墩 / 闸墙</td><td>直立坡 + 墙顶平台</td></tr>
+      <tr><td>边坡</td><td>4 面，15 m 梯段 + 5 m 马道</td></tr>
+      <tr><td>锚索</td><td>1 862 束（按图逐点定位）</td></tr>
+      <tr><td>排水孔 / 锚桩</td><td>566 / 121</td></tr>
+      <tr><td>锁口锚杆</td><td>台口 4 排 × 2.0 m，长 14/13/12/10 m</td></tr>
+      <tr><td>高强锚杆</td><td>全墙抽样表达（实际 92 657 根）</td></tr>
+      <tr><td>高强锚杆分区线</td><td>269 段（按图逐段定位）</td></tr>
+      <tr><td>系船柱</td><td>48 处</td></tr>
+      <tr><td>闸墙细部</td><td>1.5 m 衬砌墙、12 m 结构缝、压顶梁、浮式系船柱槽</td></tr>
+      <tr><td>输水系统</td><td>4 条主廊道（距中心线 26.75 m）、24 座阀门井、4 区段 8 支管、泄水箱涵</td></tr>
+      <tr><td>排水系统</td><td>14 条排水洞（南北各 7 层）、洞内排水孔幕、墙后"井"字排水管网</td></tr>
+      <tr><td>端部剖面</td><td>可查看典型横断面</td></tr>
+    </table>
+    <h3>建模规则</h3>
+    <p style="color:var(--dim)">图纸提供平面位置（桩号、高程）与坡面轮廓；横断面宽度、闸墙厚度、坡比等缺失数据取自公开文献。锚索按坡面法向、下倾约 10° 布置，只表达外露锚头与垫板。</p>
+    <h3>已知差异</h3>
+    <p style="color:var(--dim)">图纸为 1999 年施工期成果（锚索完成 1 862 束）；文献为竣工总量（4 376 束）。模型中锚索数量以图纸为准。</p>
+    <p style="color:var(--dim)">锁口锚杆：图面仅中南、南坡两张画出逐孔圆点（628 点），模型按图面规律（水平 200 cm、排距 170 cm、4 排）在四面补齐，共约 1.14 万根；文献总量 8 650 根，差异因图面为施工期布置、且文献按完成量统计。</p>
+    <p style="color:var(--dim)">高强锚杆 92 657 根若逐根建出会引起模型/网页过大，故按 1/15 抽样表达（约 6 300 根），间距与长度取文献值（1.5~2.0×1.8 m、8~13 m、φ32）；分区线按 d20 等图逐段复现。</p>
+    <h3>输水 / 排水系统</h3>
+    <p style="color:var(--dim)">输水：每线双侧主廊道（距闸室中心线 26.75 m）、每闸首阀门井与检修门井、闸室底部 4 区段 8 支廊道顶部出水、末级闸室泄水箱涵；反弧门孔口一、六闸首 4.5×5.5 m，二~五闸首 4.2×4.5 m。</p>
+    <p style="color:var(--dim)">排水：南北边坡各 7 层、共 14 条排水洞（距坡面约 35 m、层差 25~33 m、断面 2.5×3.0 m），洞内 φ91 排水孔幕；衬砌墙后"井"字形排水管网（竖向管每 12 m + 横向集水管）。</p>
+    <h3>水运新通道（图上示意）</h3>
+    <p style="color:var(--dim)">三峡水运新通道：左岸线路，总长 6.68 km，上游接太平溪、下游接大象溪，紧邻既有船闸。地形已扩展覆盖该范围（16 m 拼接 DEM），模型中绿色细带为线路示意，精确线路待初步设计图。</p>
+    <h3>地理环境（公开 DEM）</h3>
+    <p style="color:var(--dim)">坝区 30 m SRTM 地形：实测高程 12~887 m，河谷、山体与 170 m 级高边坡轮廓与图纸吻合；船闸/升船机位置为示意，精确位置以图纸桩号为准。DEM 为 2000 年蓄水前数据，仅作区域背景参考。</p>
+    <div class="note">点击模型对象可显示名称；"岩体半透明"可看清地下输水/排水系统。</div>
+  </div>
+</aside>
+
+<div id="legend">
+  <div class="lg"><span class="dot" style="background:#8f8a80"></span>岩体 / 边坡</div>
+  <div class="lg"><span class="dot" style="background:#c9c8c3"></span>混凝土 / 闸首</div>
+  <div class="lg"><span class="dot" style="background:#1c1c1e"></span>锚索（1 862 束）</div>
+  <div class="lg"><span class="dot" style="background:#1a8c62"></span>排水孔（566）</div>
+  <div class="lg"><span class="dot" style="background:#8c8880"></span>锚桩（121）</div>
+  <div class="lg"><span class="dot" style="background:#c75423"></span>锁口锚杆（台口 4 排）</div>
+  <div class="lg"><span class="dot" style="background:#e08f1e"></span>高强锚杆（抽样）</div>
+  <div class="lg"><span class="dot" style="background:#2eb8f2"></span>高强锚杆分区线</div>
+  <div class="lg"><span class="dot" style="background:#e0aa14"></span>系船柱</div>
+  <div class="lg"><span class="dot" style="background:#33443a"></span>人字门</div>
+  <div class="lg"><span class="dot" style="background:#8f8d88"></span>输水系统</div>
+  <div class="lg"><span class="dot" style="background:#3a7a6a"></span>排水系统</div>
+</div>
+
+<div id="stats">
+  <div>桩号范围 <b>14 950~16 660 m</b></div>
+  <div>最高 / 最低 <b>185 / 50.7 m</b></div>
+  <div>模型面数 <b id="fc">—</b></div>
+</div>
+
+<div id="dock">
+  <div class="btn on" data-cam="0">全景</div>
+  <div class="btn" data-cam="1">南坡立面</div>
+  <div class="btn" data-cam="2">端部剖面</div>
+  <div class="btn" data-cam="3">锚索近景</div>
+  <div class="btn" data-cam="4">闸室内部</div>
+  <div class="btn" data-cam="5">俯视</div>
+  <div class="sep"></div>
+  <div class="btn on" data-layer="锚索">锚索</div>
+  <div class="btn on" data-layer="排水孔_">排水孔</div>
+  <div class="btn on" data-layer="锚桩">锚桩</div>
+  <div class="btn on" data-layer="锁口锚杆">锁口锚杆</div>
+  <div class="btn on" data-layer="高强锚杆_">高强锚杆</div>
+  <div class="btn on" data-layer="高强锚杆分区线">分区线</div>
+  <div class="btn on" data-layer="系船柱">系船柱</div>
+  <div class="btn on" data-layer="人字门">闸门</div>
+  <div class="sep"></div>
+  <div class="btn on" data-layer="输水|泄水">输水系统</div>
+  <div class="btn on" data-layer="排水洞">排水洞</div>
+  <div class="btn on" data-layer="排水孔幕">排水孔幕</div>
+  <div class="btn on" data-layer="墙后排水">墙后排水</div>
+  <div class="btn on" data-layer="区域地形">区域地形</div>
+  <div class="btn" id="rockT">岩体半透明</div>
+  <div class="sep"></div>
+  <div class="btn" id="rot">自动旋转</div>
+  <div class="btn" id="reset">复位</div>
+</div>
+
+<div id="gal">
+  <img src="p1.jpg" data-t="全景" alt="">
+  <img src="p2.jpg" data-t="典型横断面" alt="">
+  <img src="p3.jpg" data-t="闸墙锚索细部" alt="">
+  <img src="p4.jpg" data-t="边坡锚索" alt="">
+  <img src="p5.jpg" data-t="闸室内部" alt="">
+  <img src="p6.jpg" data-t="鸟瞰" alt="">
+  <img src="p7.jpg" data-t="闸墙细部（衬砌墙/结构缝/系船柱槽）" alt="">
+  <img src="p8.jpg" data-t="输水系统（岩体隐藏）" alt="">
+  <img src="p9.jpg" data-t="排水系统（岩体隐藏）" alt="">
+  <img src="p10.jpg" data-t="坝区 30 m DEM 地形图" alt="">
+  <img src="p11.jpg" data-t="永久船闸与新通道 16 m 地形" alt="">
+  <img src="p12.jpg" data-t="锁口锚杆（台口 4 排 φ32，长 14/13/12/10 m）" alt="">
+  <img src="p13.jpg" data-t="高强锚杆（墙面锚头抽样，实际 92 657 根）" alt="">
+</div>
+<div id="hint">左键旋转 · 右键平移 · 滚轮缩放 · 点击构件查看名称</div>
+
+<div id="lightbox"><img id="lbi" alt=""><div id="lbcap"></div></div>
+<div id="tip"></div>
+
+<div id="load"><p>正在构建三维场景…</p><div id="bar"><i></i></div></div>
+
+<script>
+window.addEventListener('error', function(e){
+  var p = document.querySelector('#load p');
+  if(p){ p.textContent = '脚本错误: ' + (e.message || e.error); p.style.color = '#ff7b7b'; }
+});
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from './vendor/loaders/GLTFLoader.js';
+import { OrbitControls } from './vendor/controls/OrbitControls.js';
+
+const host = document.getElementById('view');
+const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+host.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0d141c);
+scene.fog = new THREE.Fog(0x0d141c, 2600, 5200);
+
+const camera = new THREE.PerspectiveCamera(42, innerWidth/innerHeight, 1, 30000);
+camera.position.set(1100, 620, 1250);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.maxDistance = 6000;
+controls.minDistance = 18;
+controls.autoRotateSpeed = 0.45;
+
+scene.add(new THREE.HemisphereLight(0xbcd6f0, 0x2a261f, 0.85));
+const sun = new THREE.DirectionalLight(0xfff1dc, 2.4);
+sun.position.set(-900, 1500, 900);
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x88b8e8, 0.9);
+fill.position.set(1200, 500, -900);
+scene.add(fill);
+const rim = new THREE.DirectionalLight(0xffc880, 0.55);
+rim.position.set(300, 200, 1500);
+scene.add(rim);
+
+let model, center = new THREE.Vector3(), size = new THREE.Vector3();
+const loader = new GLTFLoader();
+const bar = document.querySelector('#bar i');
+loader.load('model.glb', (gltf)=>{
+  model = gltf.scene;
+  model.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(model);
+  box.getCenter(center); box.getSize(size);
+  model.position.sub(center);          // 居中
+  model.traverse(function(o){
+    if(o.isMesh){
+      var mats = Array.isArray(o.material) ? o.material : [o.material];
+      mats.forEach(function(m){ if(m){ m.side = THREE.DoubleSide; m.needsUpdate = true; } });
+    }
+  });
+  scene.add(model);
+  // 统计面数
+  let tris = 0, meshes = 0;
+  model.traverse(o=>{ if(o.isMesh){ meshes++; const g=o.geometry; if(g && g.index) tris += g.index.count/3; else if(g) tris += (g.attributes.position.count)/3; } });
+  document.getElementById('fc').textContent = tris.toLocaleString('zh-CN') + ' 面 / ' + meshes + ' 构件';
+  // 地面网格
+  const gridSize = Math.max(size.x, size.z)*1.25;
+  const grid = new THREE.GridHelper(gridSize, 24, 0x1d3448, 0x14232f);
+  grid.position.y = box.min.y - center.y - 2;
+  scene.add(grid);
+  var _ci = parseInt(new URLSearchParams(location.search).get('cam') || '0', 10) || 0;
+  applyCam(_ci);
+  finishLoad();
+}, (e)=>{ if(e.total) bar.style.width = Math.round(e.loaded/e.total*100)+'%'; }, (err)=>{
+  document.querySelector('#load p').textContent = '模型加载失败：' + err;
+});
+
+function finishLoad(){ bar.style.width='100%'; setTimeout(()=>document.getElementById('load').classList.add('done'), 260); }
+
+// 相机预设
+function applyCam(i){
+  const s = Math.max(size.x, size.z);
+  const c = center;
+  const poses = [
+    {p:[1750, 1500, 1850], t:[0, 40, 0]},
+    {p:[0, 320, 2900], t:[0, 40, 0]},
+    {p:[-3000, 380, 1000], t:[-950, 40, 0]},
+    {p:[190, 210, 70], t:[320, 170, -120]},
+    {p:[-480, 150, 42], t:[430, 140, 42]},
+    {p:[0, 4200, 1], t:[0, 0, 0]}
+  ];
+  const q = poses[i] || poses[0];
+  camera.position.set(q.p[0], q.p[1], q.p[2]);
+  controls.target.set(q.t[0], q.t[1], q.t[2]);
+  controls.update();
+}
+document.querySelectorAll('[data-cam]').forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll('[data-cam]').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    var ci = +b.dataset.cam;
+    var showTerrain = (ci === 0 || ci === 5);
+    model.traverse(function(o){ if(o.name && o.name.indexOf('区域地形')===0) o.visible = showTerrain; });
+    applyCam(ci);
+  };
+});
+
+// 图层开关
+document.querySelectorAll('[data-layer]').forEach(b=>{
+  b.classList.toggle('on', true);
+  b.onclick = ()=>{
+    const on = b.classList.toggle('on');
+    const keys = b.dataset.layer.split('|');
+    model.traverse(o=>{ if(o.name && keys.some(k=>o.name.indexOf(k)===0)) o.visible = on; });
+  };
+});
+
+// 岩体半透明
+let rockMats = [], rockOn = false;
+function collectRockMats(){
+  const names = ['花岗岩','山体','剖面','岩壁','马道','山体顶面'];
+  const set = new Set();
+  model.traverse(o=>{
+    if(!o.isMesh) return;
+    const mats = Array.isArray(o.material)?o.material:[o.material];
+    mats.forEach(m=>{ if(m && names.some(n=>m.name.indexOf(n)>=0)) set.add(m); });
+  });
+  rockMats = Array.from(set);
+}
+document.getElementById('rockT').onclick = function(){
+  rockOn = !rockOn;
+  this.classList.toggle('on', rockOn);
+  rockMats.forEach(m=>{
+    m.transparent = rockOn; m.opacity = rockOn ? 0.16 : 1.0;
+    m.depthWrite = !rockOn; m.needsUpdate = true;
+  });
+};
+
+// 自动旋转 / 复位
+const rotBtn = document.getElementById('rot');
+rotBtn.onclick = ()=>{ controls.autoRotate = !controls.autoRotate; rotBtn.classList.toggle('on', controls.autoRotate); };
+document.getElementById('reset').onclick = ()=>{ controls.autoRotate=false; rotBtn.classList.remove('on'); applyCam(0); };
+
+// 点击识别
+const ray = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const tip = document.getElementById('tip');
+renderer.domElement.addEventListener('pointermove', (ev)=>{
+  mouse.x = (ev.clientX/innerWidth)*2-1;
+  mouse.y = -(ev.clientY/innerHeight)*2+1;
+  ray.setFromCamera(mouse, camera);
+  const hit = model ? ray.intersectObject(model, true) : [];
+  if(hit.length){
+    const o = hit[0].object;
+    tip.textContent = o.name || '构件';
+    tip.style.display='block';
+    tip.style.left = (ev.clientX+14)+'px';
+    tip.style.top = (ev.clientY+12)+'px';
+  } else tip.style.display='none';
+});
+
+// 图集
+const lb = document.getElementById('lightbox');
+document.querySelectorAll('#gal img').forEach(im=>{
+  im.onclick = ()=>{ document.getElementById('lbi').src = im.src;
+    document.getElementById('lbcap').textContent = im.dataset.t || ''; lb.classList.add('on'); };
+});
+lb.onclick = ()=> lb.classList.remove('on');
+
+// 标签页
+document.querySelectorAll('.tab').forEach(t=>{
+  t.onclick = ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+    document.querySelectorAll('.pane').forEach(x=>x.classList.remove('on'));
+    t.classList.add('on');
+    document.getElementById(t.dataset.p).classList.add('on');
+  };
+});
+
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+let t0 = performance.now();
+function loop(){
+  requestAnimationFrame(loop);
+  controls.update();
+  renderer.render(scene, camera);
+}
+loop();
+</script>
+</body>
+</html>
