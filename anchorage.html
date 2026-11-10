@@ -84,7 +84,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 #ids{position:fixed;inset:0;pointer-events:none;z-index:7;overflow:hidden}
 #ids .aid{position:absolute;transform:translate(-50%,-50%);font-size:10px;line-height:1.1;white-space:nowrap;
   color:#ffd7d7;text-shadow:0 0 3px #000,0 1px 2px #000;pointer-events:none}
-#ids .aid.b{color:#cfe0ff}
+#ids .aid.b{color:#b9ffc9}
 #tl{position:fixed;left:50%;transform:translateX(-50%);bottom:150px;z-index:8;display:flex;align-items:center;gap:10px;
   background:rgba(6,12,18,.82);border:1px solid rgba(85,194,255,.3);border-radius:10px;padding:8px 14px;color:#dceaf6;font-size:12px}
 #tl.on{display:flex}
@@ -274,7 +274,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
     <div class="mh">图层</div>
     <div class="mbody">
       <div class="btn on" data-layer="锚索对穿">对穿锚索(红)</div>
-      <div class="btn on" data-layer="锚索端头">端头锚索(蓝)</div>
+      <div class="btn on" data-layer="锚索端头">端头锚索(绿)</div>
       <div class="btn" data-layer="锁口锚杆">锁口锚杆(黄)</div>
       <div class="btn" data-layer="高强锚杆">高强锚杆(蓝)</div>
       <div class="btn on" data-layer="人字门">闸门</div>
@@ -415,7 +415,7 @@ loader.load('model_base.glb?v=10', (gltf)=>{ try { console.log('CB start');
   setupGates();
   initWater();
   // 叠加锚索（单独文件，约 2 MB，不阻塞首屏）
-  loader.load('锚索.glb?v=9', function(g2){
+  loader.load('锚索.glb?v=10', function(g2){
     var a = g2.scene;
     a.position.copy(model.position);
     scene.add(a);
