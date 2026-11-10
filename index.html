@@ -90,7 +90,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
     <div class="h-title">三峡永久船闸 <span>· 结构基准模型</span></div>
     <div class="h-sub">双线五级连续船闸 · 轮廓 / 闸室 / 闸首 / 底板 / 输水系统　|　不含锚索·锚杆·锁口锚杆等锚固件</div>
   </div>
-  <div class="badge">锚固模型另见 <a href="anchorage.html">锚固模型</a>　|　1 单位 = 1 m</div>
+  <div class="badge">锚固模型另见 <a href="锚固模型.html">锚固模型</a>　|　1 单位 = 1 m</div>
 </header>
 
 <aside id="panel">
@@ -176,7 +176,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
   <div class="lg"><span class="dot" style="background:#c9c8c3"></span>混凝土结构</div>
   <div class="lg"><span class="dot" style="background:#33443a"></span>人字门</div>
   <div class="lg"><span class="dot" style="background:#5a7a99"></span>输水系统</div>
-  <div class="lg"><span class="dot" style="background:#4a7a6a"></span>排水洞</div>
+  <div class="lg"><span class="dot" style="background:#19cc6b"></span>排水洞（山体内）</div>
   <div class="lg"><span class="dot" style="background:#7f7a6a"></span>区域地形</div>
 </div>
 
@@ -198,7 +198,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
   <div class="btn on" data-layer="输水|泄水|检修门井">输水系统</div>
   <div class="btn on" data-layer="排水洞">排水洞</div>
   <div class="btn" data-layer="区域地形">区域地形</div>
-  <div class="btn" id="rockT">岩体半透明</div>
+  <div class="btn on" id="rockT">岩体半透明</div>
   <div class="sep"></div>
   <div class="btn" id="rot">自动旋转</div>
   <div class="btn" id="reset">复位</div>
@@ -211,6 +211,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
   <img src="b4.jpg" data-t="闸室内部" alt="">
   <img src="b5.jpg" data-t="闸首（人字门/支枕）" alt="">
   <img src="b6.jpg" data-t="输水系统（岩体隐藏）" alt="">
+  <img src="b7.jpg" data-t="山体半透明：山体内排水洞" alt="">
 </div>
 <div id="hint">左键旋转 · 右键平移 · 滚轮缩放 · 点击构件查看名称</div>
 
@@ -273,6 +274,8 @@ loader.load('model_base.glb', (gltf)=>{
     }
   });
   scene.add(model);
+  collectRockMats();
+  applyRock(true);
   // 区域地形默认隐藏（按钮初始为关）
   model.traverse(function(o){ if(o.name && o.name.indexOf('区域地形') === 0) o.visible = false; });
   let tris = 0, meshes = 0;
@@ -320,7 +323,7 @@ document.querySelectorAll('[data-layer]').forEach(b=>{
   };
 });
 
-let rockMats = [], rockOn = false;
+let rockMats = [], rockOn = true;
 function collectRockMats(){
   const names = ['花岗岩','山体','剖面','岩壁','马道','山体顶面'];
   const set = new Set();
@@ -331,15 +334,17 @@ function collectRockMats(){
   });
   rockMats = Array.from(set);
 }
-setTimeout(collectRockMats, 400);
+function applyRock(on){
+  rockMats.forEach(m=>{
+    m.transparent = on; m.opacity = on ? 0.32 : 1.0;
+    m.depthWrite = !on; m.needsUpdate = true;
+  });
+}
 document.getElementById('rockT').onclick = function(){
   if(!rockMats.length) collectRockMats();
   rockOn = !rockOn;
   this.classList.toggle('on', rockOn);
-  rockMats.forEach(m=>{
-    m.transparent = rockOn; m.opacity = rockOn ? 0.16 : 1.0;
-    m.depthWrite = !rockOn; m.needsUpdate = true;
-  });
+  applyRock(rockOn);
 };
 
 const rotBtn = document.getElementById('rot');
@@ -390,6 +395,7 @@ loop();
 </script>
 </body>
 </html>
+
 
 
 
