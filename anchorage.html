@@ -280,7 +280,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 <div id="lightbox"><img id="lbi" alt=""><div id="lbcap"></div></div>
 <div id="tip"></div>
 
-<div id="load"><p>正在加载结构基准…</p><div id="bar"><i></i></div></div>
+<div id="load"><p>正在加载锚固模型（约 17 MB，请稍候）…</p><div id="bar"><i></i></div></div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -335,7 +335,7 @@ scene.add(rim);
 let model, center = new THREE.Vector3(), size = new THREE.Vector3();
 const loader = new GLTFLoader();
 const bar = document.querySelector('#bar i');
-loader.load('model_anchor.glb?v=9', (gltf)=>{
+loader.load('model_anchor.glb?v=10', (gltf)=>{
   model = gltf.scene;
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
