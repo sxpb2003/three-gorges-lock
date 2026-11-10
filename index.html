@@ -83,12 +83,15 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 #elev{width:88px;vertical-align:middle;accent-color:#55c2ff;cursor:pointer}
 #elevv{color:var(--txt);font-variant-numeric:tabular-nums;min-width:34px;display:inline-block;text-align:right}
 @media(max-width:900px){
-  #panel{width:calc(100vw - 32px);left:16px;top:84px;bottom:150px}
+  #panel{width:calc(100vw - 20px);left:10px;top:68px;bottom:auto;max-height:46vh;border-radius:14px}
+  #panel .pane{padding:10px 12px;font-size:12px;line-height:1.5}
+  #panel .tab{padding:8px 4px;font-size:12px}
   #legend{display:none}#stats{display:none}#gal{display:none}
-  #toggleP{top:84px;left:16px;font-size:13px}
-  #dock{bottom:10px;padding:6px;gap:6px}
-  .btn{font-size:11px;padding:6px 9px}
-  #hint{font-size:10px;bottom:96px}
+  #toggleP{top:66px;left:10px;font-size:12px;padding:9px 13px}
+  #dock{bottom:8px;padding:5px;gap:5px;max-height:34vh;overflow-y:auto}
+  .btn{font-size:11px;padding:5px 8px}
+  #elev{width:64px}
+  #hint{display:none}
 }
 </style>
 <script type="importmap">
@@ -460,6 +463,10 @@ document.getElementById('reset').onclick = ()=>{ controls.autoRotate=false; rotB
 const ray = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 const tip = document.getElementById('tip');
+renderer.domElement.addEventListener('pointerdown', function(){
+  const pnl = document.getElementById('panel');
+  if(pnl && !pnl.classList.contains('hide')) showPanel(false);
+});
 renderer.domElement.addEventListener('pointermove', (ev)=>{
   mouse.x = (ev.clientX/innerWidth)*2-1;
   mouse.y = -(ev.clientY/innerHeight)*2+1;
