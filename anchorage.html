@@ -335,7 +335,7 @@ scene.add(rim);
 let model, center = new THREE.Vector3(), size = new THREE.Vector3();
 const loader = new GLTFLoader();
 const bar = document.querySelector('#bar i');
-loader.load('model_anchor.glb?v=8', (gltf)=>{
+loader.load('model_anchor.glb?v=9', (gltf)=>{
   model = gltf.scene;
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
@@ -576,7 +576,7 @@ function finishLoad(){ bar.style.width='100%'; setTimeout(()=>document.getElemen
 
 function applyCam(i){
   const poses = [
-    {p:[1150, 560, 1050], t:[0, 80, 0]},
+    {p:[-285, 60, -10], t:[-195, -15, -95]},
     {p:[1050, 1350, 1150], t:[0, 30, 0]},
     {p:[-3000, 300, 0], t:[-900, 100, 0]},
     {p:[-320, 120, 30], t:[220, 130, 30]},
@@ -633,7 +633,7 @@ function collectRockMats(){
 }
 function applyRock(on){
   rockMats.forEach(m=>{
-    m.transparent = on; m.opacity = on ? 0.16 : 1.0;
+    m.transparent = on; m.opacity = on ? 0.28 : 1.0;
     m.depthWrite = !on; m.needsUpdate = true;
   });
 }
