@@ -159,7 +159,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 <header>
   <div>
     <div class="h-title">三峡永久船闸 <span>· 锚固模型</span></div>
-    <div class="h-sub">双线五级连续船闸 · 结构基准 + 锚索 3949 束（对穿 1986 红 / 端头 1963 蓝，按验收资料）</div>
+    <div class="h-sub">双线五级连续船闸 · 结构基准 + 锚索 3949 束（对穿 1986 红 / 端头 1963 绿，按验收资料）</div>
   </div>
   <div class="badge">锚固模型另见 <a href="锚固模型.html" style="color:#55c2ff;text-decoration:none;font-weight:600">锚固模型 →</a>　|　1 单位 = 1 m</div>
 </header>
@@ -262,8 +262,8 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
   <div class="mgrp" data-g="cam">
     <div class="mh">视角</div>
     <div class="mbody">
-      <div class="btn" data-cam="0">全景</div>
-      <div class="btn on" data-cam="1">鸟瞰</div>
+      <div class="btn on" data-cam="0">锚索近景</div>
+      <div class="btn" data-cam="1">鸟瞰</div>
       <div class="btn" data-cam="2">端部剖面</div>
       <div class="btn" data-cam="3">闸室内部</div>
       <div class="btn" data-cam="4">闸首</div>
@@ -410,12 +410,13 @@ loader.load('model_base.glb?v=10', (gltf)=>{ try { console.log('CB start');
   const grid = new THREE.GridHelper(gridSize, 24, 0x1d3448, 0x14232f);
   grid.position.y = box.min.y - center.y - 2;
   scene.add(grid);
-  applyCam(parseInt(new URLSearchParams(location.search).get('cam') || '1', 10) || 1);
+  var _cam = new URLSearchParams(location.search).get('cam');
+applyCam(_cam === null || _cam === '' ? 0 : (parseInt(_cam, 10) || 0));
   setElev(45);
   setupGates();
   initWater();
   // 叠加锚索（单独文件，约 2 MB，不阻塞首屏）
-  loader.load('锚索.glb?v=10', function(g2){
+  loader.load('锚索.glb?v=12', function(g2){
     var a = g2.scene;
     a.position.copy(model.position);
     scene.add(a);
@@ -686,6 +687,7 @@ function stopPlay(){
 
 // ---------------- 放大后显示锚索编号 ----------------
 var idData = [], idPool = [], idLast = 0;
+console.log('IDS fetch start');
 fetch('anchor_ids.json').then(function(r){ return r.json(); }).then(function(d){ idData = d; }).catch(function(){});
 function ensureIdEls(n){
   var host = document.getElementById('ids');
@@ -704,7 +706,7 @@ function updateIds(){
   var host = document.getElementById('ids');
   var camPos = camera.position;
   host.style.display = 'block';
-  var lim = 130;                       // 视点 130 m 内有锚索就显示编号
+  var lim = 400;                       // 视点 400 m 内有锚索就显示编号（放大后自动出现）
   var curMonth = (tl.months.length ? tl.months[tl.idx] : '');
   var cand = [];
   var mp = model.position;
@@ -716,7 +718,8 @@ function updateIds(){
     if(d2 < lim * lim) cand.push([d2, i]);
   }
   cand.sort(function(a, b){ return a[0] - b[0]; });
-  cand = cand.slice(0, 150);
+  cand = cand.slice(0, 180);
+  if(!window.__idlog){ window.__idlog = 1; console.log('IDDBG data=' + idData.length + ' cand=' + cand.length + ' camY=' + camPos.y.toFixed(0)); }
   ensureIdEls(cand.length);
   var v = new THREE.Vector3();
   for(var k = 0; k < idPool.length; k++){
@@ -923,6 +926,7 @@ loop();
 </script>
 </body>
 </html>
+
 
 
 
