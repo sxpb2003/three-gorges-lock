@@ -80,6 +80,9 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
   border-radius:6px;pointer-events:none;display:none;z-index:10;color:var(--txt)}
 #pClose{position:absolute;top:8px;right:10px;z-index:2;width:26px;height:26px;line-height:24px;text-align:center;border-radius:8px;color:var(--dim);cursor:pointer;font-size:14px}
 #pClose:hover{color:var(--txt);background:rgba(85,194,255,.12)}
+#labels{position:fixed;inset:0;pointer-events:none;z-index:6;overflow:hidden}
+.lbl{position:absolute;transform:translate(-50%,-50%);font-size:10.5px;line-height:1.2;color:#e6f2ff;background:rgba(6,12,18,.72);border:1px solid rgba(85,194,255,.32);padding:2px 6px;border-radius:6px;white-space:nowrap;pointer-events:none;text-shadow:0 1px 2px rgba(0,0,0,.8)}
+.lbl.major{font-size:12px;font-weight:600;color:#bfe6ff;border-color:rgba(85,194,255,.6);background:rgba(10,22,34,.85)}
 #toggleP{position:fixed;top:92px;left:20px;z-index:9;display:none;font-size:13px;font-weight:600;color:var(--txt);background:rgba(20,32,44,.92);border:1px solid rgba(85,194,255,.45);border-radius:12px;padding:11px 16px;cursor:pointer;backdrop-filter:blur(10px);box-shadow:0 6px 18px rgba(0,0,0,.35)}
 #panel{transition:transform .35s ease,opacity .35s}
 #panel.hide{transform:translateX(-108%);opacity:0;pointer-events:none}
@@ -116,6 +119,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 </head>
 <body>
 <div id="view"></div>
+<div id="labels"></div>
 <div id="toggleP">☰ 显示选项</div>
 <div id="grad"></div>
 
@@ -250,6 +254,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
       <div class="btn on" id="rot45">45° 缓慢旋转</div>
       <div class="btn" id="rot">自动旋转</div>
       <div class="btn" id="reset">复位</div>
+      <div class="btn on" id="labT">标注</div>
       <a class="btn" href="anchorage.html">锚固模型</a>
     </div>
   </div>
@@ -401,18 +406,24 @@ function setupGates(){
 
 function updateGates(){
   if(!gateList.length) return;
-  const T = 26.0;
+  // 正常船闸运行次序：下行 一→六 依次开门放船；再 六→一 反向（上行）
+  const T = 72.0;            // 一个循环 12 个时段 × 6 s
+  const SLOT = 6.0;
   const tt = clock.getElapsedTime();
+  function pulse(u){
+    u = ((u % T) + T) % T;
+    if (u < 1.2) return u / 1.2;          // 开
+    if (u < 3.2) return 1;                // 开到位
+    if (u < 4.4) return 1 - (u - 3.2) / 1.2;  // 关
+    return 0;
+  }
   gateList.forEach(g=>{
-    const local = (tt + (5 - g.hid) * 1.9) % T;   // 下游闸首先开，逐级向上游推进
-    let f;
-    if (local < 4.0) f = 0;
-    else if (local < 7.0) f = (local - 4.0) / 3.0;
-    else if (local < 10.0) f = 1;
-    else if (local < 13.0) f = 1 - (local - 10.0) / 3.0;
-    else f = 0;
-    f = f * f * (3 - 2 * f);                        // 平滑
-    g.pivot.rotation.y = g.closed * f;   // 绕竖直门轴（Y 轴）水平旋转
+    const i = g.hid;                       // 0..5 对应 一~六闸首
+    const slotA = i * SLOT;                // 下行：一→六
+    const slotB = (6 + (5 - i)) * SLOT;    // 上行：六→一
+    let f = Math.max(pulse(tt - slotA), pulse(tt - slotB));
+    f = f * f * (3 - 2 * f);
+    g.pivot.rotation.y = g.closed * f;     // 绕竖直门轴（Y 轴）水平旋转
   });
 }
 
@@ -422,6 +433,34 @@ function showPanel(show){
   if(show){ pnl.dataset.userOpened = '1'; }
   pnl.classList.toggle('hide', !show);
   btn.style.display = show ? 'none' : 'block';
+}
+
+// ---------------- 3D 标注 ----------------
+const labelItems = [];
+const labelHost = document.getElementById('labels');
+fetch('labels.json').then(r=>r.json()).then(list=>{
+  list.forEach(function(it){
+    const el = document.createElement('div');
+    el.className = 'lbl' + (it.name.indexOf('闸首')>=0 && it.name.length<=3 ? ' major' : '');
+    el.textContent = it.name;
+    labelHost.appendChild(el);
+    labelItems.push({ el: el, p: new THREE.Vector3(it.x, it.y, it.z) });
+  });
+  document.getElementById('labT').classList.toggle('on', true);
+}).catch(function(e){ console.warn('labels', e); });
+
+function updateLabels(){
+  if(!labelItems.length) return;
+  const w = innerWidth, hh = innerHeight;
+  const v = new THREE.Vector3();
+  labelItems.forEach(function(it){
+    v.copy(it.p).sub(center).project(camera);
+    const visible = v.z < 1 && v.z > -1;
+    if(!visible){ it.el.style.display = 'none'; return; }
+    it.el.style.display = 'block';
+    it.el.style.left = ((v.x * 0.5 + 0.5) * w) + 'px';
+    it.el.style.top = ((-v.y * 0.5 + 0.5) * hh) + 'px';
+  });
 }
 
 function finishLoad(){ bar.style.width='100%'; setTimeout(()=>document.getElementById('load').classList.add('done'), 260); }
@@ -510,6 +549,10 @@ document.getElementById('rot45').onclick = function(){
 };
 document.getElementById('toggleP').onclick = function(){ showPanel(true); };
 document.getElementById('pClose').onclick = function(){ showPanel(false); };
+document.getElementById('labT').onclick = function(){
+  const on = this.classList.toggle('on');
+  document.getElementById('labels').style.display = on ? 'block' : 'none';
+};
 document.getElementById('reset').onclick = ()=>{ controls.autoRotate=false; rotBtn.classList.remove('on'); applyCam(0); };
 
 const ray = new THREE.Raycaster();
@@ -555,7 +598,7 @@ addEventListener('resize', ()=>{
   renderer.setSize(innerWidth, innerHeight);
 });
 
-function loop(){ requestAnimationFrame(loop); updateGates(); controls.update(); renderer.render(scene, camera); }
+function loop(){ requestAnimationFrame(loop); updateGates(); updateLabels(); controls.update(); renderer.render(scene, camera); }
 loop();
 </script>
 </body>
