@@ -335,7 +335,7 @@ scene.add(rim);
 let model, center = new THREE.Vector3(), size = new THREE.Vector3();
 const loader = new GLTFLoader();
 const bar = document.querySelector('#bar i');
-loader.load('model_anchor.glb?v=7', (gltf)=>{
+loader.load('model_anchor.glb?v=8', (gltf)=>{
   model = gltf.scene;
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
@@ -355,8 +355,8 @@ loader.load('model_anchor.glb?v=7', (gltf)=>{
   // 锚固视图：隐藏外闸墙、闸首、人字门、水位；中隔墩半透明，露出墩内锚索锚杆
   model.traverse(function(o){
     if(!o || !o.name) return;
-    if(/^(北闸墙|南闸墙|闸首|人字门_|水面_|锁口锚杆|高强锚杆)/.test(o.name)) { o.visible = false; return; }
-    if(/^(中墩|中隔墩顶)/.test(o.name) && o.isMesh){
+    if(/^(北闸墙|南闸墙|闸首|中隔墩顶|人字门_|水面_|锁口锚杆|高强锚杆)/.test(o.name)) { o.visible = false; return; }
+    if(/^(中墩北墙|中墩南墙)/.test(o.name) && o.isMesh){
       var mats = Array.isArray(o.material) ? o.material : [o.material];
       o.material = mats.map(function(m){
         var c = m.clone(); c.transparent = true; c.opacity = 0.28; c.depthWrite = false; c.needsUpdate = true; return c;
