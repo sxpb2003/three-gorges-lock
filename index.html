@@ -49,6 +49,9 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 #stats{position:fixed;right:20px;top:268px;z-index:6;background:var(--panel);border:1px solid var(--line);
   border-radius:12px;padding:10px 14px;font-size:12px;color:var(--dim);backdrop-filter:blur(12px);min-width:170px}
 #stats b{color:var(--txt);font-weight:600}
+.mgrp{display:contents}
+.mh{display:none}
+.mbody{display:contents}
 #dock{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:7;display:flex;gap:8px;
   padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(14px);
   align-items:center;flex-wrap:wrap;justify-content:center;max-width:calc(100vw - 40px)}
@@ -88,10 +91,23 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
   #panel .tab{padding:8px 4px;font-size:12px}
   #legend{display:none}#stats{display:none}#gal{display:none}
   #toggleP{top:66px;left:10px;font-size:12px;padding:9px 13px}
-  #dock{bottom:8px;padding:5px;gap:5px;max-height:34vh;overflow-y:auto}
+  #dock{bottom:8px;padding:6px;gap:6px;max-height:none;overflow:visible}
   .btn{font-size:11px;padding:5px 8px}
   #elev{width:64px}
   #hint{display:none}
+  /* 手机端：三组折叠菜单 */
+  .mgrp{display:inline-block;position:relative}
+  .mh{display:block;font-size:12px;font-weight:600;color:var(--txt);background:rgba(20,32,44,.95);
+      border:1px solid rgba(85,194,255,.35);border-radius:10px;padding:8px 12px;cursor:pointer;white-space:nowrap}
+  .mgrp.open .mh{background:var(--accent);color:#04121c;border-color:var(--accent)}
+  .mbody{display:none;position:absolute;bottom:calc(100% + 8px);left:0;width:74vw;max-width:320px;
+         flex-wrap:wrap;gap:6px;padding:10px;background:rgba(12,20,28,.96);border:1px solid var(--line);
+         border-radius:12px;backdrop-filter:blur(12px);box-shadow:0 10px 30px rgba(0,0,0,.45)}
+  .mgrp.open .mbody{display:flex}
+  .h-title{font-size:17px;letter-spacing:.5px}
+  .h-sub{font-size:10.5px;line-height:1.5;margin-top:3px}
+  .badge{display:none}
+  header{padding:12px 14px}
 }
 </style>
 <script type="importmap">
@@ -108,7 +124,7 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
     <div class="h-title">三峡永久船闸 <span>· 结构基准模型</span></div>
     <div class="h-sub">双线五级连续船闸 · 轮廓 / 闸室 / 闸首 / 底板 / 输水系统　|　不含锚索·锚杆·锁口锚杆等锚固件</div>
   </div>
-  <div class="badge">锚固模型另见 <a href="锚固模型.html">锚固模型</a>　|　1 单位 = 1 m</div>
+  <div class="badge">锚固模型另见 <a href="锚固模型.html" style="color:#55c2ff;text-decoration:none;font-weight:600">锚固模型 →</a>　|　1 单位 = 1 m</div>
 </header>
 
 <aside id="panel">
@@ -206,23 +222,37 @@ td:last-child{color:var(--txt);text-align:right;font-variant-numeric:tabular-num
 </div>
 
 <div id="dock">
-  <div class="btn" data-cam="0">全景</div>
-  <div class="btn on" data-cam="1">鸟瞰</div>
-  <div class="btn" data-cam="2">端部剖面</div>
-  <div class="btn" data-cam="3">闸室内部</div>
-  <div class="btn" data-cam="4">闸首</div>
-  <div class="btn" data-cam="5">输水系统</div>
-  <div class="sep"></div>
-  <div class="btn on" data-layer="人字门">闸门</div>
-  <div class="btn on" data-layer="输水|泄水|检修门井">输水系统</div>
-  <div class="btn on" data-layer="排水洞">排水洞</div>
-  <div class="btn" data-layer="区域地形">区域地形</div>
-  <div class="btn on" id="rockT">岩体半透明</div>
-  <div class="sep"></div>
-  <label class="btn" style="cursor:default">俯视 <input id="elev" type="range" min="0" max="90" step="1" value="45"><span id="elevv">45°</span></label>
-  <div class="btn on" id="rot45">45° 缓慢旋转</div>
-  <div class="btn" id="rot">自动旋转</div>
-  <div class="btn" id="reset">复位</div>
+  <div class="mgrp" data-g="cam">
+    <div class="mh">视角</div>
+    <div class="mbody">
+      <div class="btn" data-cam="0">全景</div>
+      <div class="btn on" data-cam="1">鸟瞰</div>
+      <div class="btn" data-cam="2">端部剖面</div>
+      <div class="btn" data-cam="3">闸室内部</div>
+      <div class="btn" data-cam="4">闸首</div>
+      <div class="btn" data-cam="5">输水系统</div>
+    </div>
+  </div>
+  <div class="mgrp" data-g="layer">
+    <div class="mh">图层</div>
+    <div class="mbody">
+      <div class="btn on" data-layer="人字门">闸门</div>
+      <div class="btn on" data-layer="输水|泄水|检修门井">输水系统</div>
+      <div class="btn on" data-layer="排水洞">排水洞</div>
+      <div class="btn" data-layer="区域地形">区域地形</div>
+      <div class="btn on" id="rockT">岩体半透明</div>
+    </div>
+  </div>
+  <div class="mgrp" data-g="more">
+    <div class="mh">设置</div>
+    <div class="mbody">
+      <label class="btn" style="cursor:default">俯视 <input id="elev" type="range" min="0" max="90" step="1" value="45"><span id="elevv">45°</span></label>
+      <div class="btn on" id="rot45">45° 缓慢旋转</div>
+      <div class="btn" id="rot">自动旋转</div>
+      <div class="btn" id="reset">复位</div>
+      <a class="btn" href="anchorage.html">锚固模型</a>
+    </div>
+  </div>
 </div>
 
 <div id="gal">
@@ -404,6 +434,22 @@ function applyCam(i){
   controls.target.set(q.t[0], q.t[1], q.t[2]);
   controls.update();
 }
+// 手机端三组折叠菜单
+document.querySelectorAll('.mh').forEach(h=>{
+  h.addEventListener('click', function(ev){
+    ev.stopPropagation();
+    const g = h.parentElement;
+    const wasOpen = g.classList.contains('open');
+    document.querySelectorAll('.mgrp').forEach(x=>x.classList.remove('open'));
+    if(!wasOpen) g.classList.add('open');
+  });
+});
+document.addEventListener('click', function(){
+  document.querySelectorAll('.mgrp').forEach(x=>x.classList.remove('open'));
+});
+
+document.querySelectorAll('.mbody').forEach(function(b){ b.addEventListener('click', function(e){ e.stopPropagation(); }); });
+
 document.querySelectorAll('[data-cam]').forEach(b=>{
   b.onclick = ()=>{
     document.querySelectorAll('[data-cam]').forEach(x=>x.classList.remove('on'));
@@ -508,6 +554,7 @@ loop();
 </script>
 </body>
 </html>
+
 
 
 
