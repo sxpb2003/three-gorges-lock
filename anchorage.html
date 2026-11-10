@@ -422,7 +422,7 @@ applyCam(_cam === null || _cam === '' ? 0 : (parseInt(_cam, 10) || 0));
   setupGates();
   initWater();
   // 叠加锚索（单独文件，约 2 MB，不阻塞首屏）
-  loader.load('锚索.glb?v=12', function(g2){
+  loader.load('锚索.glb?v=13', function(g2){
     var a = g2.scene;
     a.position.copy(model.position);
     scene.add(a);
@@ -932,6 +932,7 @@ loop();
 </script>
 </body>
 </html>
+
 
 
 
