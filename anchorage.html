@@ -375,7 +375,7 @@ scene.add(rim);
 let model, center = new THREE.Vector3(), size = new THREE.Vector3();
 const loader = new GLTFLoader();
 const bar = document.querySelector('#bar i');
-loader.load('model_base.glb?v=10', (gltf)=>{ try { console.log('CB start');
+loader.load('model_base.glb?v=13', (gltf)=>{ try { console.log('CB start');
   model = gltf.scene;
   model.updateMatrixWorld(true);
   const box = new THREE.Box3().setFromObject(model);
@@ -413,6 +413,12 @@ loader.load('model_base.glb?v=10', (gltf)=>{ try { console.log('CB start');
   var _cam = new URLSearchParams(location.search).get('cam');
 applyCam(_cam === null || _cam === '' ? 0 : (parseInt(_cam, 10) || 0));
   setElev(45);
+  model.traverse(function(o){
+    if(o.isMesh && o.name && o.name.indexOf('排水洞') === 0){
+      var ms = Array.isArray(o.material) ? o.material : [o.material];
+      ms.forEach(function(m){ if(m){ m.transparent = true; m.opacity = 0.42; m.depthWrite = false; m.side = THREE.DoubleSide; m.needsUpdate = true; } });
+    }
+  });
   setupGates();
   initWater();
   // 叠加锚索（单独文件，约 2 MB，不阻塞首屏）
