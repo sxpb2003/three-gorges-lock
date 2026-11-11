@@ -134,7 +134,7 @@ function applyMonth(t) {
     const sx = done ? 0 : (b.x1 - b.x0);
     const sy = done ? 0 : (b.z1 - b.z0);
     const sz = done ? 0 : (b.y1 - b.y0);
-    dummy.compose(new THREE.Vector3((b.x0 + b.x1) / 2 - CX, (b.z0 + b.z1) / 2, (b.y0 + b.y1) / 2),
+    dummy.compose(new THREE.Vector3((b.x0 + b.x1) / 2, (b.z0 + b.z1) / 2, (b.y0 + b.y1) / 2),
                   q0, new THREE.Vector3(sx, sy, sz));
     inst.setMatrixAt(i, dummy);
   });
